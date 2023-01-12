@@ -1,0 +1,60 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: documentation
+
+appDomain: api.lcacollect.dk
+appProtocol: https
+deployType: "PROD"
+secretName: documentation-secrets
+
+secretStore:
+  name: lcacollect
+  tenantId: ""
+  userAssignedIdentityID: ""
+
+imageKey:
+  registry: lcacollect
+  repository: documentation
+  tag: 1
+
+db:
+  appName: database
+  serviceName: database-service
+  databaseName: documentation
+  configmap: db-config
+  replicas: 1
+  dockerImageTag: 13.1-alpine
+  volume: documentation-database-volume
+  pvc: database-pvc
+  port: 5432
+  secret: postgres-secret
+  username: postgres-user
+  localVolumePath: "/mnt/minikube/documentation"
+  ssl: true
+
+backend:
+  appName: backend
+  serviceName: backend-service
+  configmap: backend-config
+  replicas: 1
+  servicePort: 8000
+  routerUrl: http://router-service.router:4000
+  storageAccountURL:
+    name: documentation-storage-account-url
+    value: "c2VjcmV0"
+  storageContainer:
+    name: documentation-storage-container-name
+    value: "c2VjcmV0"
+  storageSecret:
+    name: documentation-storage-access-key
+    value: "c2VjcmV0"
+  storageBasePath: hash
+  speckleTokenSecret:
+    name: speckle-token
+    value: "c2VjcmV0"
+  adTenantId: ""
+  adOpenApiClientId: ""
+  adAppClientId: ""
+

@@ -1,0 +1,42 @@
+[tool.pytest.ini_options]
+addopts = "--cov=src --cov-report=term-missing --cov-branch --cov-report=xml"
+asyncio_mode = "auto"
+console_output_style = "count"
+pythonpath = "src"
+required_plugins = ["pytest-cov>=4.0.0", "pytest-azurepipelines", "pytest-mock"]
+testpaths = ["tests/"]
+
+env = [
+    "SERVER_NAME=LCA Test",
+    "SERVER_HOST=http://test.com",
+    "PROJECT_NAME=LCA Test",
+    "POSTGRES_HOST=localhost",
+    "POSTGRES_USER=postgresuser",
+    "POSTGRES_PASSWORD=mypassword",
+    "POSTGRES_DB=lca-assembly",
+    "POSTGRES_PORT=5632",
+    "AAD_OPENAPI_CLIENT_ID=PLACEHOLDER",
+    "AAD_APP_CLIENT_ID=PLACEHOLDER",
+    "AAD_TENANT_ID=PLACEHOLDER",
+    "AAD_TEST_CLIENT_SECRET=PLACEHOLDER",
+    "STORAGE_ACCOUNT_URL=PLACEHOLDER",
+    "ROUTER_URL=http://router.url",
+    "STORAGE_CONTAINER_NAME=PALCEHOLDER",
+    "STORAGE_ACCESS_KEY=PLACEHOLDER",
+    "STORAGE_BASE_PATH=test",
+    "SPECKLE_TOKEN=PLACEHOLDER",
+]
+
+[tool.coverage.run]
+omit=["src/initial_data/*.py", "src/initialize.py", "src/main.py"]
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+extend-include = """
+^/alembic
+"""
+
+[tool.isort]
+profile = "black"
+src_paths = ["src", "tests"]

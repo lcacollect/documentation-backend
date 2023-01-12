@@ -1,0 +1,9 @@
+name,description,area,area_unit,length,length_unit
+Wall 1,my wall 1,23.2,m2,10,m
+Wall 2,my wall 2,24.2,m3,11,m
+Wall 3,my wall 3,25.2,m2,12,m
+Wall 4,my wall 4,26.2,m2,13,mm
+Wall 5,my wall 5,27.2,m2,14,m
+Wall 6,my wall 6,28.2,m2,15,m
+Wall 7,my wall 7,29.2,m2,16,m
+Wall 8,my wall 8,30.2,m2,17,m

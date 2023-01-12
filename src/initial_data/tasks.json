@@ -1,0 +1,54 @@
+[
+  {
+    "id": "d4b48bd1-794f-4d79-b235-5568cec719c1",
+    "due_date": "2022-11-15",
+    "name": "My Task 1",
+    "description": "You have to upload something",
+    "status": "Pending",
+    "reporting_schema_id": "5cf97040-ddf0-4759-af30-aa0e8857ee2f",
+    "author_id": "60067d80-3bd0-42b7-8b17-2b9c0c8aaff3",
+    "category_name": "1 | Bygningsbasis",
+    "element_id": null,
+    "assignee_id": "f8a9e659-ce95-49cf-b45d-5b0a867a4a17",
+    "assigned_group_id": null
+  },
+  {
+    "id": "24278a64-f32e-41b6-9d82-94821010d5eb",
+    "due_date": "2022-11-15",
+    "name": "My Task 2",
+    "description": "You have to upload something",
+    "status": "Completed",
+    "reporting_schema_id": "5cf97040-ddf0-4759-af30-aa0e8857ee2f",
+    "author_id": "60067d80-3bd0-42b7-8b17-2b9c0c8aaff3",
+    "category_id": null,
+    "element_name": "Wall 0",
+    "assignee_id": "f8a9e659-ce95-49cf-b45d-5b0a867a4a17",
+    "assigned_group_id": null
+  },
+  {
+    "id": "f051f231-0284-43de-aa8a-5197dae8c14e",
+    "due_date": "2023-11-15",
+    "name": "My Task 3",
+    "description": "You have to upload something",
+    "status": "Pending",
+    "reporting_schema_id": "5cf97040-ddf0-4759-af30-aa0e8857ee2f",
+    "author_id": "60067d80-3bd0-42b7-8b17-2b9c0c8aaff3",
+    "category_name": "2 | Primære bygningsdele",
+    "element_id": null,
+    "assignee_id": null,
+    "assigned_group_id": "8c7031fc-3eb7-46f6-b641-081582ff51c6"
+  },
+    {
+    "id": "6125be8f-0588-4238-91f0-3c1d39df3fe5",
+    "due_date": "2023-01-15",
+    "name": "My Task 4",
+    "description": "You have to upload something",
+    "status": "Approved",
+    "reporting_schema_id": "5cf97040-ddf0-4759-af30-aa0e8857ee2f",
+    "author_id": "60067d80-3bd0-42b7-8b17-2b9c0c8aaff3",
+    "category_id": null,
+    "element_name": "Wall 3",
+    "assignee_id": null,
+    "assigned_group_id": "8c7031fc-3eb7-46f6-b641-081582ff51c6"
+  }
+]
