@@ -3,7 +3,7 @@ from typing import List
 
 import pytest
 from httpx import AsyncClient
-from lcaconfig.connection import create_postgres_engine
+from lcacollect_config.connection import create_postgres_engine
 from pytest_alembic.config import Config
 from sqlalchemy.orm import selectinload
 from sqlmodel import select

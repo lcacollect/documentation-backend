@@ -1,7 +1,7 @@
 from inspect import getdoc
 
 import strawberry
-from lcaconfig.permissions import IsAuthenticated
+from lcacollect_config.permissions import IsAuthenticated
 
 import schema.comment as schema_comment
 import schema.commit as schema_commit

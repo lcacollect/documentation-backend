@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Optional
 
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.formatting import string_uuid
 
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement

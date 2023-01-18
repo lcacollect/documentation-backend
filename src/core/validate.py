@@ -1,6 +1,6 @@
-from lcaconfig.context import get_token, get_user
-from lcaconfig.exceptions import AuthenticationError, DatabaseItemNotFound
-from lcaconfig.validate import group_exists, is_super_admin, project_exists
+from lcacollect_config.context import get_token, get_user
+from lcacollect_config.exceptions import AuthenticationError, DatabaseItemNotFound
+from lcacollect_config.validate import group_exists, is_super_admin, project_exists
 from strawberry.types import Info
 
 from core.federation import get_members

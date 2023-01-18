@@ -7,7 +7,7 @@ from typing import Optional
 
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.formatting import string_uuid
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSON
 from sqlmodel import Field, Relationship, SQLModel

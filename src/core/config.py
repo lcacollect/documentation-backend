@@ -1,4 +1,4 @@
-from lcaconfig import config
+from lcacollect_config import config
 
 
 class DocumentationSettings(config.Settings):

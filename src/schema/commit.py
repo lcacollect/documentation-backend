@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Annotated, Optional
 
 import strawberry
 from aiocache import cached
-from lcaconfig.context import get_session
-from lcaconfig.graphql.input_filters import filter_model_query
+from lcacollect_config.context import get_session
+from lcacollect_config.graphql.input_filters import filter_model_query
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info

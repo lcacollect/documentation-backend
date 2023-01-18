@@ -1,6 +1,6 @@
 from typing import Optional
 
-from lcaconfig.formatting import string_uuid
+from lcacollect_config.formatting import string_uuid
 from sqlalchemy.orm import RelationshipProperty
 from sqlmodel import Field, Relationship, SQLModel
 

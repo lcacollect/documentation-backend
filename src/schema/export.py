@@ -3,7 +3,7 @@ import json
 from enum import Enum
 
 import strawberry
-from lcaconfig.context import get_session
+from lcacollect_config.context import get_session
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info

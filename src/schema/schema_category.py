@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Annotated, Optional
 
 import strawberry
-from lcaconfig.context import get_session, get_user
-from lcaconfig.exceptions import DatabaseItemNotFound
-from lcaconfig.graphql.input_filters import filter_model_query
+from lcacollect_config.context import get_session, get_user
+from lcacollect_config.exceptions import DatabaseItemNotFound
+from lcacollect_config.graphql.input_filters import filter_model_query
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info

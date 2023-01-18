@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
 
-from lcaconfig.connection import create_postgres_engine
+from lcacollect_config.connection import create_postgres_engine
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.expression import func
 from sqlmodel import select

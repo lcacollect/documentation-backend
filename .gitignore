@@ -148,3 +148,4 @@ minikube*
 
 # Skaffold
 skaffold
+.kpt-pipeline

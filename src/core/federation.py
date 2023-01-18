@@ -1,6 +1,6 @@
 import httpx
 import strawberry
-from lcaconfig.context import get_token
+from lcacollect_config.context import get_token
 from strawberry.types import Info
 
 from core.config import settings

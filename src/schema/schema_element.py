@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, Annotated, Optional, Union
 
 import strawberry
 from fastapi import HTTPException
-from lcaconfig.context import get_session, get_user
-from lcaconfig.exceptions import DatabaseItemNotFound
-from lcaconfig.graphql.input_filters import filter_model_query
+from lcacollect_config.context import get_session, get_user
+from lcacollect_config.exceptions import DatabaseItemNotFound
+from lcacollect_config.graphql.input_filters import filter_model_query
 from specklepy.api import operations
 from specklepy.api.client import SpeckleClient
 from specklepy.transports.server import ServerTransport

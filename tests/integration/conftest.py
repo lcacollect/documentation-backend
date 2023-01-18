@@ -236,7 +236,7 @@ def csv_file(datafix_dir):
 
 @pytest.fixture
 def project_exists_mock(mocker):
-    mocker.patch("lcaconfig.validate.project_exists", return_value=True)
+    mocker.patch("lcacollect_config.validate.project_exists", return_value=True)
 
 
 @pytest.fixture
@@ -246,12 +246,12 @@ def project_doesnt_exists_mock(httpx_mock):
 
 @pytest.fixture
 def group_exists_mock(mocker):
-    mocker.patch("lcaconfig.validate.group_exists", return_value=True)
+    mocker.patch("lcacollect_config.validate.group_exists", return_value=True)
 
 
 @pytest.fixture
 def group_doesnt_exist_mock(mocker):
-    mocker.patch("lcaconfig.validate.group_exists", return_value=False)
+    mocker.patch("lcacollect_config.validate.group_exists", return_value=False)
 
 
 @pytest.fixture

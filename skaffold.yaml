@@ -26,7 +26,6 @@ build:
       docker:
         dockerfile: ./Dockerfile
         buildArgs:
-          ARTIFACTS_TOKEN_BACKEND_PACKAGES: '{{ .ARTIFACTS_TOKEN_BACKEND_PACKAGES }}'
           BUILD_STAGE: DEV
           BUILD_VERSION: DEV
 manifests:
@@ -52,6 +51,9 @@ manifests:
           backend.storageAccountURL.value: '{{ .STORAGE_ACCOUNT_URL }}'
           backend.storageContainer.value: '{{ .STORAGE_CONTAINER }}'
           backend.storageSecret.value: '{{ .STORAGE_SECRET }}'
+          backend.adTenantId: '{{ .AAD_TENANT_ID }}'
+          backend.adOpenApiClientId: '{{ .AAD_OPENAPI_CLIENT_ID }}'
+          backend.adAppClientId: '{{ .AAD_APP_CLIENT_ID }}'
         createNamespace: true
 deploy:
   helm: { }
