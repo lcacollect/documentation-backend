@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.config import settings
 from models.commit import Commit
 from models.schema_element import SchemaElement
 from models.source import ProjectSource
@@ -72,7 +71,7 @@ async def test_create_schema_element_from_source(
     schema_categories,
     project_sources,
     member_mocker,
-    download_blob_mock,
+    blob_client_mock,
     get_response: Callable,
 ):
     mutation = """

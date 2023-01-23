@@ -255,19 +255,60 @@ def group_doesnt_exist_mock(mocker):
 
 
 @pytest.fixture
-def upload_blob_mock(mocker):
-    mocker.patch("azure.storage.blob.aio.BlobClient.upload_blob", return_value=asyncio.Future())
+def blob_client_mock(mocker, datafix_dir):
 
+    class FakeBlob:
+        def upload_blob(self, data):
+            return None
 
-@pytest.fixture
-def download_blob_mock(mocker, datafix_dir):
+        def download_blob(self):
+            return MockObject()
+
     data = (datafix_dir / "source_data.csv").read_bytes()
 
     class MockObject:
         def readall(self):
             return data
 
-    mocker.patch("azure.storage.blob.BlobClient.download_blob", return_value=MockObject())
+    mocker.patch("azure.storage.blob.BlobClient.__init__", return_value=None)
+    mocker.patch("azure.storage.blob.BlobClient.__enter__", return_value=FakeBlob())
+    mocker.patch("azure.storage.blob.BlobClient.__exit__", return_value=None)
+
+@pytest.fixture
+def blob_client_mock_async(mocker, datafix_dir):
+
+    class FakeBlob:
+        async def upload_blob(self, data):
+            return asyncio.Future()
+
+        async def download_blob(self):
+            return MockObject()
+
+    data = (datafix_dir / "source_data.csv").read_bytes()
+
+    class MockObject:
+        def readall(self):
+            return data
+
+    mocker.patch("azure.storage.blob.aio.BlobClient.__init__", return_value=None)
+    mocker.patch("azure.storage.blob.aio.BlobClient.__aenter__", return_value=FakeBlob())
+    mocker.patch("azure.storage.blob.aio.BlobClient.__aexit__", return_value=None)
+
+
+# @pytest.fixture
+# def upload_blob_mock(mocker):
+#     mocker.patch("azure.storage.blob.aio.BlobClient.upload_blob", return_value=asyncio.Future())
+#
+#
+# @pytest.fixture
+# def download_blob_mock(mocker, datafix_dir):
+#     data = (datafix_dir / "source_data.csv").read_bytes()
+#
+#     class MockObject:
+#         def readall(self):
+#             return data
+#
+#     mocker.patch("azure.storage.blob.BlobClient.download_blob", return_value=MockObject())
 
 
 @pytest.fixture

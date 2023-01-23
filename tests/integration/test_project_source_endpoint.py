@@ -70,7 +70,7 @@ async def test_add_file_source_mutation(
     client: AsyncClient,
     project_sources,
     member_mocker,
-    upload_blob_mock,
+    blob_client_mock_async,
     project_exists_mock,
     get_response: Callable,
 ):
@@ -99,8 +99,8 @@ async def test_add_file_source_mutation(
         "type": f"{ProjectSourceType.CSV.name}",
         "dataId": "test/ba/ef/70c78b30e27266c4f5368bfb0938a03a17870355fd1558ca36ec45ddf851",
         "name": "some_name",
-        "metaFields": {"url": "https://documentationbundle.blob.core.windows.net/PALCEHOLDER"},
-        "fileUrl": "https://documentationbundle.blob.core.windows.net/PALCEHOLDER/test/ba/ef/70c78b30e27266c4f5368bfb0938a03a17870355fd1558ca36ec45ddf851",
+        "metaFields": {"url": "PLACEHOLDER/PALCEHOLDER"},
+        "fileUrl": "PLACEHOLDER/PALCEHOLDER/test/ba/ef/70c78b30e27266c4f5368bfb0938a03a17870355fd1558ca36ec45ddf851",
         "authorId": "someid0",
     }
 
@@ -142,7 +142,7 @@ async def test_update_project_source_mutation(
     client: AsyncClient,
     project_sources,
     member_mocker,
-    upload_blob_mock,
+    blob_client_mock_async,
     get_response: Callable,
 ):
     query = """

@@ -1,7 +1,6 @@
 import csv
 import datetime
 import logging
-import tempfile
 from io import StringIO
 from typing import Optional
 
