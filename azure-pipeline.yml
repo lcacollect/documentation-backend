@@ -13,13 +13,13 @@ resources:
 variables:
   # Container registry service connection established during pipeline creation
   imageRepository: 'documentation'
-  containerRegistry: 'PLACEHOLDER'
+  containerRegistry: 'LCAcollect ACR'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
 
   # Helm registry
-  azureSubscriptionForACR: 'Azure Cloud Connection'
-  azureResourceGroupForACR: 'PLACEHOLDER'
+  azureSubscriptionForACR: 'LCAcollect Shared Container Reg'
+  containerRegistryName: lcamolio.azurecr.io
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -61,12 +61,13 @@ stages:
         vmImageName: $(vmImageName)
         dockerfilePath: $(dockerfilePath)
         imageRepository: $(imageRepository)
+        containerRegistry: $(containerRegistry)
         tag: $(tag)
     - template: pipelines/helm-deploy.yaml@AzureTemplates
       parameters:
         vmImageName: $(vmImageName)
         azureSubscription: $(azureSubscriptionForACR)
-        containerRegistry: $(containerRegistry)
+        containerRegistry: $(containerRegistryName)
         chartName: $(imageRepository)
         tag: $(tag)
         workingDirectory: $(workingDirectory)/helm
