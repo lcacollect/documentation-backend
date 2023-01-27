@@ -8,19 +8,8 @@
         "interpretation": {
             "interpretationName": ""
         },
-        "author_id": "60067d80-3bd0-42b7-8b17-2b9c0c8aaff3",
+        "author_id": "4712ea63-dc4e-4adb-9e41-76bb01d924d2",
         "updated": "2022-11-15 16:38:33.167152",
         "meta_fields": {"url": "https://documentationbundle.blob.core.windows.net/userfiles"}
-    },
-    {
-        "id": "c5b19d60-046a-42c6-8e6a-698d17e9e4c1",
-        "type": "speckle",
-        "data_id": "",
-        "name": "Speckle Source",
-        "project_id": "91604a3c-f30a-40af-8951-a738db49171d",
-        "interpretation": {},
-        "author_id": "60067d80-3bd0-42b7-8b17-2b9c0c8aaff3",
-        "updated": "2022-11-15 16:38:33.167152",
-        "meta_fields": {"url": "https://speckle.arkitema.com"}
     }
 ]
