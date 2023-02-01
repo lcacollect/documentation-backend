@@ -24,6 +24,7 @@ from core.validate import authenticate, authenticate_project
 from schema.inputs import ProjectSourceFilters
 
 if TYPE_CHECKING:  # pragma: no cover
+    from models.source import ProjectSource
     from schema.schema_element import GraphQLSchemaElement
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,12 @@ logger = logging.getLogger(__name__)
 class ProjectSourceType(Enum):
     CSV = "csv"
     SPECKLE = "speckle"
+
+
+@strawberry.type
+class GraphQLSourceFile:
+    headers: list[str]
+    rows: JSON
 
 
 @strawberry.federation.type(keys=["id"])
@@ -52,6 +59,12 @@ class GraphQLProjectSource:
     def file_url(self) -> str | None:
         if self.type == ProjectSourceType.CSV.value:
             return self.meta_fields.get("url") + "/" + self.data_id
+
+    @strawberry.field
+    def data(self: "ProjectSource") -> GraphQLSourceFile | None:
+        if self.type == ProjectSourceType.CSV.value:
+            headers, rows = self.data
+            return GraphQLSourceFile(headers=headers, rows=rows)
 
 
 async def project_sources_query(
