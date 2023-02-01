@@ -82,12 +82,7 @@ type GraphQLProjectSource @key(fields: "id") {
   updated: DateTime!
   elements: [GraphQLSchemaElement!]
   fileUrl: String
-}
-
-type GraphQLProjectSourceFile {
-  dataId: String!
-  headers: JSON!
-  rows: JSON!
+  data: GraphQLSourceFile
 }
 
 type GraphQLReportingCreationSchema {
@@ -134,6 +129,11 @@ type GraphQLSchemaTemplate {
   id: String!
   name: String!
   schema: GraphQLReportingSchema
+}
+
+type GraphQLSourceFile {
+  headers: [String!]!
+  rows: JSON!
 }
 
 type GraphQLTag {
@@ -272,9 +272,6 @@ type Query {
 
   """Get all sources associated with a project"""
   projectSources(projectId: String!, filters: ProjectSourceFilters = null): [GraphQLProjectSource!]!
-
-  """Get source files with a list of data ids"""
-  projectSourceFiles(dataIds: [String!] = null, type: ProjectSourceType = CSV): [GraphQLProjectSourceFile!]!
 
   """Query Schema Templates"""
   schemaTemplates(filters: SchemaTemplateFilters = null): [GraphQLSchemaTemplate!]!

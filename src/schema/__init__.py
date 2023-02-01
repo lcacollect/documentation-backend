@@ -11,7 +11,6 @@ import schema.schema_category as schema_category
 import schema.schema_element as schema_element
 import schema.schema_template as schema_template
 import schema.source as schema_source
-import schema.source_file as schema_source_file
 import schema.tag as schema_tag
 import schema.task as schema_task
 from core import federation
@@ -26,11 +25,6 @@ class Query:
         permission_classes=[IsAuthenticated],
         resolver=schema_source.project_sources_query,
         description=getdoc(schema_source.project_sources_query),
-    )
-    project_source_files: list[schema_source_file.GraphQLProjectSourceFile] = strawberry.field(
-        permission_classes=[IsAuthenticated],
-        resolver=schema_source_file.project_source_files_query,
-        description=getdoc(schema_source_file.project_source_files_query),
     )
 
     # Reporting Schema

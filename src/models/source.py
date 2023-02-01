@@ -49,14 +49,14 @@ class ProjectSource(SQLModel, table=True):
                     dialect = csv.Sniffer().sniff(csv_data.read(1024))
                     csv_data.seek(0)
                     reader = csv.DictReader(csv_data, dialect=dialect)
-                    rows = [row for row in reader]
+                    rows = [{**row, "id": index} for index, row in enumerate(reader)]
                     return list(rows[0].keys()), rows
                 except ResourceNotFoundError:
                     logger.error(
                         f"Could not download file from Azure Storage Container: "
                         f"{settings.STORAGE_ACCOUNT_URL}/{settings.STORAGE_CONTAINER_NAME}"
                     )
-                    raise
+                    return [], []
 
         else:
             raise NotImplementedError(f"Only ProjectSourceType CSV is allowed")

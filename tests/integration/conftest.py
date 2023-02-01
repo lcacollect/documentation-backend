@@ -256,7 +256,6 @@ def group_doesnt_exist_mock(mocker):
 
 @pytest.fixture
 def blob_client_mock(mocker, datafix_dir):
-
     class FakeBlob:
         def upload_blob(self, data):
             return None
@@ -274,9 +273,9 @@ def blob_client_mock(mocker, datafix_dir):
     mocker.patch("azure.storage.blob.BlobClient.__enter__", return_value=FakeBlob())
     mocker.patch("azure.storage.blob.BlobClient.__exit__", return_value=None)
 
+
 @pytest.fixture
 def blob_client_mock_async(mocker, datafix_dir):
-
     class FakeBlob:
         async def upload_blob(self, data):
             return asyncio.Future()

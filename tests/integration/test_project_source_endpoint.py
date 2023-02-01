@@ -23,6 +23,10 @@ async def test_project_sources_query(
                 projectId
                 metaFields
                 dataId
+                data {
+                  headers
+                  rows
+                }
             }
         }
     """
@@ -34,6 +38,7 @@ async def test_project_sources_query(
         "projectId": f"0",
         "metaFields": dict(speckle_url="speckle.arkitema.com"),
         "dataId": "21b253d478",
+        "data": None,
     }
 
 
