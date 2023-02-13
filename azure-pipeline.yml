@@ -15,7 +15,10 @@ variables:
   imageRepository: 'documentation'
   containerRegistry: 'LCAcollect ACR'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    tag: '$(Build.BuildId)'
+  ${{ else }}:
+    tag: '$(Build.BuildId)-dev'
 
   # Helm registry
   azureSubscriptionForACR: 'LCAcollect Shared Container Reg'
