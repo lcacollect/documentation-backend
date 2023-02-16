@@ -21,7 +21,7 @@ variables:
     tag: '$(Build.BuildId)-dev'
 
   # Helm registry
-  azureSubscriptionForACR: 'LCAcollect Shared Container Reg'
+  azureSubscriptionForACR: 'LCAcollect ACR'
   containerRegistryName: lcamolio.azurecr.io
 
   # Agent VM image name
