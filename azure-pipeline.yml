@@ -21,8 +21,8 @@ variables:
     tag: '$(Build.BuildId)-dev'
 
   # Helm registry
-  azureSubscriptionForACR: 'LCAcollect ACR'
-  containerRegistryName: lcamolio.azurecr.io
+  azureSubscriptionForACR: 'LCAcollect Shared Container Reg'
+  containerRegistryName: lcacollect.azurecr.io
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
