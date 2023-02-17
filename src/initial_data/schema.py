@@ -201,10 +201,10 @@ if __name__ == "__main__":
     from models.commit import Commit
     from models.reporting_schema import ReportingSchema
     from models.repository import Repository
-    from models.source import ProjectSource
     from models.schema_category import SchemaCategory
     from models.schema_element import SchemaElement
     from models.schema_template import SchemaTemplate
+    from models.source import ProjectSource
     from models.tag import Tag
 
     p = Path(__file__).parent / "bim7aa.txt"
