@@ -62,13 +62,13 @@ async def create_categories(rows: list, schema, session):
 
 
 async def create_schema(session):
-    query = select(SchemaTemplate).where(SchemaTemplate.name == "BIM7AA")
+    query = select(SchemaTemplate).where(SchemaTemplate.name == "BR23 - BIMTypeCode")
     _templates = (await session.exec(query)).all()
     if _templates:
         return None
 
-    schema = ReportingSchema(name="BIM7AA")
-    template = SchemaTemplate(name="BIM7AA", original_id=schema.id)
+    schema = ReportingSchema(name="BR23 - BIMTypeCode")
+    template = SchemaTemplate(name="BR23 - BIMTypeCode", original_id=schema.id)
     schema.template_id = template.id
     session.add(schema)
     await session.commit()
@@ -150,7 +150,7 @@ async def assign_reporting():
             select(ReportingSchema)
             .join(SchemaTemplate)
             .where(
-                SchemaTemplate.name == "BIM7AA",
+                SchemaTemplate.name == "BR23 - BIMTypeCode",
                 ReportingSchema.project_id == None,
             )
             .options(selectinload(ReportingSchema.categories))
@@ -198,6 +198,15 @@ async def assign_reporting():
 
 
 if __name__ == "__main__":
+    from models.commit import Commit
+    from models.reporting_schema import ReportingSchema
+    from models.repository import Repository
+    from models.source import ProjectSource
+    from models.schema_category import SchemaCategory
+    from models.schema_element import SchemaElement
+    from models.schema_template import SchemaTemplate
+    from models.tag import Tag
+
     p = Path(__file__).parent / "bim7aa.txt"
     r = load_bim7aa(p)
     asyncio.run(create_reporting(r))
