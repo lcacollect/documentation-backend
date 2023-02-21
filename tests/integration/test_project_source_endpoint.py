@@ -110,6 +110,7 @@ async def test_add_file_source_mutation(
     }
 
 
+@pytest.mark.skip("Speckle isn't implemented")
 async def test_add_speckle_source_mutation(
     client: AsyncClient,
     project_sources,
