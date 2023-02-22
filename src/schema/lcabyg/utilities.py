@@ -35,7 +35,11 @@ def _translate_bim7aa_to_gendk(
     else:
         type_id = entity.name.split("|")[0].strip()
 
-    return _bim7aa_to_gendk_dict.get(str(type_id), "069983d0-d08b-405b-b816-d28ca9648956")
+    gend_dk_uuid = _bim7aa_to_gendk_dict.get(str(type_id), None)
+    if gend_dk_uuid is None:
+        gend_dk_uuid = "069983d0-d08b-405b-b816-d28ca9648956"
+        logger.warning(f"Could not find type ID {type_id}. Defaulting to {gend_dk_uuid} (other)")
+    return gend_dk_uuid
 
 
 CATEGORY_RESOLVERS = {"BIM7AA": _translate_bim7aa_to_gendk}

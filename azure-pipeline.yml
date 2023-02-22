@@ -2,6 +2,7 @@ trigger:
   branches:
     include:
     - main
+    - stage
 
 resources:
   repositories:
@@ -15,11 +16,14 @@ variables:
   imageRepository: 'documentation'
   containerRegistry: 'LCAcollect ACR'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+    tag: '$(Build.BuildId)'
+  ${{ else }}:
+    tag: '$(Build.BuildId)-dev'
 
   # Helm registry
   azureSubscriptionForACR: 'LCAcollect Shared Container Reg'
-  containerRegistryName: lcamolio.azurecr.io
+  containerRegistryName: lcacollect.azurecr.io
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -40,7 +44,7 @@ stages:
 
 - stage: Artifact
   displayName: Publish GraphQL Schema
-  condition: and(succeeded(), and(eq(variables.isMain, 'true'), eq(variables.isPR, 'false')))
+  condition: and(succeeded(), eq(variables.isPR, 'false'))
   dependsOn: Test
   jobs:
     - job: PublishSchema
@@ -51,7 +55,7 @@ stages:
 
 - stage: Deploy
   displayName: Build and Deploy
-  condition: and(succeeded(), and(eq(variables.isMain, 'true'), eq(variables.isPR, 'false')))
+  condition: and(succeeded(), eq(variables.isPR, 'false'))
   dependsOn:
     - Test
     - Artifact
