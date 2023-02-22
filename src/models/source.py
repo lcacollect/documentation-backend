@@ -1,9 +1,9 @@
-import csv
 import datetime
 import logging
 from io import StringIO
 from typing import Optional
 
+import pandas
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
 from lcacollect_config.formatting import string_uuid
@@ -35,7 +35,7 @@ class ProjectSource(SQLModel, table=True):
     def data(self):
         from schema.source import ProjectSourceType
 
-        if self.type == ProjectSourceType.CSV.value:
+        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XSLX.value):
             with BlobClient(
                 account_url=settings.STORAGE_ACCOUNT_URL,
                 container_name=settings.STORAGE_CONTAINER_NAME,
@@ -45,10 +45,15 @@ class ProjectSource(SQLModel, table=True):
                 try:
                     stream = blob.download_blob()
                     raw_data = stream.readall()
-                    csv_data = StringIO(raw_data.decode())
-                    dialect = csv.Sniffer().sniff(csv_data.read(1024))
-                    csv_data.seek(0)
-                    reader = csv.DictReader(csv_data, dialect=dialect)
+
+                    # reader: [{"col1_name": "row_val", "col2_name":..}, {...}]
+                    if self.type == ProjectSourceType.CSV.value:
+                        file_data = StringIO(raw_data.decode())
+                        reader = pandas.read_csv(file_data).to_dict("records")
+
+                    if self.type == ProjectSourceType.XSLX.value:
+                        reader = pandas.read_excel(raw_data).to_dict("records")
+
                     rows = [{**row, "id": index} for index, row in enumerate(reader)]
                     return list(rows[0].keys()), rows
                 except ResourceNotFoundError:
@@ -59,4 +64,4 @@ class ProjectSource(SQLModel, table=True):
                     return [], []
 
         else:
-            raise NotImplementedError(f"Only ProjectSourceType CSV is allowed")
+            raise NotImplementedError(f"Only ProjectSourceType CSV or XSLX is allowed")

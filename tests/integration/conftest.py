@@ -94,6 +94,9 @@ async def project_sources(db) -> list[ProjectSource]:
     sources = []
     csv_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a0"
     csv_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
+    xlsx_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a1"
+    xlsx_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
+
     async with AsyncSession(db) as session:
         for i in range(4):
             source = ProjectSource(
@@ -116,6 +119,19 @@ async def project_sources(db) -> list[ProjectSource]:
             )
             session.add(source)
             sources.append(source)
+
+        xlsx_source = ProjectSource(
+            type="xslx",
+            data_id=xlsx_data_id,
+            name=f"Source 5",
+            project_id="5",
+            meta_fields=dict(speckle_url="speckle.arkitema.com"),
+            interpretation=xlsx_interpretation,
+            author_id="some_user",
+        )
+        session.add(xlsx_source)
+        sources.append(xlsx_source)
+
         await session.commit()
         [await session.refresh(source) for source in sources]
 
@@ -252,6 +268,26 @@ def group_exists_mock(mocker):
 @pytest.fixture
 def group_doesnt_exist_mock(mocker):
     mocker.patch("lcacollect_config.validate.group_exists", return_value=False)
+
+
+@pytest.fixture
+def blob_client_mock_xlsx(mocker, datafix_dir):
+    class FakeBlob:
+        def upload_blob(self, data):
+            return None
+
+        def download_blob(self):
+            return MockObject()
+
+    data = (datafix_dir / "source_data.xlsx").read_bytes()
+
+    class MockObject:
+        def readall(self):
+            return data
+
+    mocker.patch("azure.storage.blob.BlobClient.__init__", return_value=None)
+    mocker.patch("azure.storage.blob.BlobClient.__enter__", return_value=FakeBlob())
+    mocker.patch("azure.storage.blob.BlobClient.__exit__", return_value=None)
 
 
 @pytest.fixture
