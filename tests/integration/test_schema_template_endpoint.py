@@ -44,7 +44,6 @@ async def test_get_schema_templates_with_filters(client: AsyncClient, schema_tem
 
 @pytest.mark.asyncio
 async def test_create_template(client: AsyncClient, get_response: Callable):
-
     mutation = """
         mutation{
             addSchemaTemplate(name: "Schema Template 0") {
