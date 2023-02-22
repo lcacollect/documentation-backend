@@ -48,7 +48,6 @@ async def query_comments(info: Info, task_id: str, filters: Optional[CommentFilt
 
 
 async def add_comment_mutation(info: Info, task_id: str, text: str) -> GraphQLComment:
-
     """Add a comment to a task"""
 
     task = await authenticate_comment(info, task_id)
@@ -73,7 +72,6 @@ async def add_comment_mutation(info: Info, task_id: str, text: str) -> GraphQLCo
 
 
 async def update_comment_mutation(info: Info, id: str, text: str) -> GraphQLComment:
-
     """Update a task comment"""
 
     session = get_session(info)
@@ -115,7 +113,6 @@ async def delete_comment_mutation(info: Info, id: str) -> str:
 
 @cached(ttl=60, key_builder=lambda function, *args, **kwargs: f"{function.__name__}_{args[1]}")
 async def authenticate_comment(info: Info, task_id: str) -> models_task.Task:
-
     """Authenticates the user trying to access a comment"""
 
     session = get_session(info)

@@ -89,7 +89,6 @@ class Node(Entity):
         return EntityTypes.ELEMENT
 
     def as_dict(self) -> dict:
-
         if self.type is EntityTypes.ELEMENT:
             self_dict = {
                 "Node": {

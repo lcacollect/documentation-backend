@@ -18,6 +18,8 @@ specklepy = "*"
 aiohttp = "*"
 azure-storage-blob = "*"
 aiocache = "*"
+pandas = "*"
+openpyxl = "*"
 
 [dev-packages]
 pydevd-pycharm = "==222.4459.20"
@@ -39,7 +41,7 @@ pytest-mock = "*"
 psycopg2-binary = "*"
 pytest-cov = "*"
 pytest-azurepipelines = "*"
+debugpy = "*"
 
 [requires]
 python_version = "3.10"
-

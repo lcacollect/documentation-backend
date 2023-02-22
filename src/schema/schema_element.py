@@ -261,8 +261,8 @@ async def add_schema_element_from_source_mutation(
     source = await session.get(models_source.ProjectSource, source_id)
     if source.type == schema_source.ProjectSourceType.SPECKLE.name:
         elements = await speckle_to_elements(elements, object_ids, schema_category, schema_category_id, source)
-    elif source.type == schema_source.ProjectSourceType.CSV.value:
-        elements = await csv_to_elements(schema_category_id, source, object_ids, quantities, units)
+    elif source.type in (schema_source.ProjectSourceType.CSV.value, schema_source.ProjectSourceType.XSLX.value):
+        elements = await file_data_to_elements(schema_category_id, source, object_ids, quantities, units)
     else:
         raise SourceElementCreationError(
             f"Can not add elements from source: {source.id} with source type: {source.type}"
@@ -368,7 +368,7 @@ async def speckle_to_elements(elements, object_ids, schema_category, schema_cate
     return elements
 
 
-async def csv_to_elements(
+async def file_data_to_elements(
     schema_category_id: str,
     source: models_source.ProjectSource,
     objects_ids: list[str],
@@ -377,7 +377,7 @@ async def csv_to_elements(
 ):
     elements = []
     interpretation = source.interpretation
-    headers, csv_data = source.data
+    headers, file_data = source.data
 
     if len(objects_ids) != len(quantities) or len(objects_ids) != len(units):
         raise SourceElementCreationError(
@@ -386,7 +386,7 @@ async def csv_to_elements(
 
     for idx, object_id in enumerate(objects_ids):
         try:
-            row = csv_data[int(object_id)]
+            row = file_data[int(object_id)]
         except IndexError:
             raise SourceElementCreationError(f"Object with id: {object_id} does not exist on source: {source.id}")
         except ValueError:
