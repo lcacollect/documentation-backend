@@ -7,7 +7,6 @@ Create Date: 2022-10-07 15:32:08.687930
 """
 import sqlalchemy as sa
 import sqlmodel
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -28,9 +27,7 @@ def upgrade():
         sa.Column("item_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("item_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "reporting_schema_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("reporting_schema_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("author_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["reporting_schema_id"],

@@ -121,7 +121,7 @@ async def project_sources(db) -> list[ProjectSource]:
             sources.append(source)
 
         xlsx_source = ProjectSource(
-            type="xslx",
+            type="xlsx",
             data_id=xlsx_data_id,
             name=f"Source 5",
             project_id="5",

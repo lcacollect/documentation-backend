@@ -3,6 +3,7 @@ import logging
 from io import StringIO
 from typing import Optional
 
+import numpy as np
 import pandas
 from azure.core.exceptions import ResourceNotFoundError
 from azure.storage.blob import BlobClient
@@ -35,7 +36,7 @@ class ProjectSource(SQLModel, table=True):
     def data(self):
         from schema.source import ProjectSourceType
 
-        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XSLX.value):
+        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XLSX.value):
             with BlobClient(
                 account_url=settings.STORAGE_ACCOUNT_URL,
                 container_name=settings.STORAGE_CONTAINER_NAME,
@@ -49,10 +50,10 @@ class ProjectSource(SQLModel, table=True):
                     # reader: [{"col1_name": "row_val", "col2_name":..}, {...}]
                     if self.type == ProjectSourceType.CSV.value:
                         file_data = StringIO(raw_data.decode())
-                        reader = pandas.read_csv(file_data).to_dict("records")
+                        reader = pandas.read_csv(file_data).replace({np.nan: None}).to_dict("records")
 
-                    if self.type == ProjectSourceType.XSLX.value:
-                        reader = pandas.read_excel(raw_data).to_dict("records")
+                    elif self.type == ProjectSourceType.XLSX.value:
+                        reader = pandas.read_excel(raw_data).replace({np.nan: None}).to_dict("records")
 
                     rows = [{**row, "id": index} for index, row in enumerate(reader)]
                     return list(rows[0].keys()), rows
@@ -64,4 +65,4 @@ class ProjectSource(SQLModel, table=True):
                     return [], []
 
         else:
-            raise NotImplementedError(f"Only ProjectSourceType CSV or XSLX is allowed")
+            raise NotImplementedError(f"Only ProjectSourceType CSV or XLSX is allowed")

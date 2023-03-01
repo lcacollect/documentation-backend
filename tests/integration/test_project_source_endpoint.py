@@ -108,7 +108,7 @@ async def test_add_CSV_file_source_mutation(
     }
 
 
-async def test_add_XSLX_file_source_mutation(
+async def test_add_XLSX_file_source_mutation(
     client: AsyncClient,
     project_sources,
     member_mocker,
@@ -120,7 +120,7 @@ async def test_add_XSLX_file_source_mutation(
         mutation {{
             addProjectSource(
                 projectId: "10"
-                type: XSLX
+                type: XLSX
                 file: "aW0gYSBmaWxlLCBhIGNzdiBmaWxl"
                 name: "some_name"
             ) {{
@@ -138,7 +138,7 @@ async def test_add_XSLX_file_source_mutation(
     data = await get_response(client, query)
     assert data["addProjectSource"] == {
         "projectId": "10",
-        "type": f"{ProjectSourceType.XSLX.name}",
+        "type": f"{ProjectSourceType.XLSX.name}",
         "dataId": "test/ba/ef/70c78b30e27266c4f5368bfb0938a03a17870355fd1558ca36ec45ddf851",
         "name": "some_name",
         "metaFields": {"url": "PLACEHOLDER/PALCEHOLDER"},

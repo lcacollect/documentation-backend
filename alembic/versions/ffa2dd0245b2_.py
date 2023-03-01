@@ -7,7 +7,6 @@ Create Date: 2022-09-20 11:28:02.282645
 """
 import sqlalchemy as sa
 import sqlmodel
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -32,9 +31,7 @@ def upgrade():
         sa.Column("path", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "reporting_schema_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("reporting_schema_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["reporting_schema_id"],
             ["reportingschema.id"],
@@ -57,15 +54,11 @@ def upgrade():
         sa.Column("id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("classification", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "subclassification", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("subclassification", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("quantity", sa.Integer(), nullable=True),
         sa.Column("unit", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "schema_category_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("schema_category_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["schema_category_id"],
             ["schemacategory.id"],

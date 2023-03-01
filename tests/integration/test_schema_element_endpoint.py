@@ -75,7 +75,7 @@ async def test_create_schema_element_from_source(
     get_response: Callable,
 ):
     mutation = """
-        mutation addElement($schemaCategoryId: String!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [String!]){
+        mutation addElement($schemaCategoryId: String!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
             addSchemaElementFromSource(schemaCategoryId: $schemaCategoryId, sourceId: $sourceId, objectIds: $objectIds, units: $units, quantities: $quantities){
                 name
                 unit
@@ -101,7 +101,7 @@ async def test_create_schema_element_from_source(
         "sourceId": source.id,
         "objectIds": ["0", "2"],
         "units": [Unit.M2.name, Unit.M3.name],
-        "quantities": ["123,456", "456,789"],
+        "quantities": [123.456, 456.789],
     }
 
     data = await get_response(client, mutation, variables=variables)
@@ -127,7 +127,7 @@ async def test_create_schema_element_from_source_xlsx(
     get_response: Callable,
 ):
     mutation = """
-        mutation addElement($schemaCategoryId: String!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [String!]){
+        mutation addElement($schemaCategoryId: String!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
             addSchemaElementFromSource(schemaCategoryId: $schemaCategoryId, sourceId: $sourceId, objectIds: $objectIds, units: $units, quantities: $quantities){
                 name
                 unit
@@ -146,14 +146,14 @@ async def test_create_schema_element_from_source_xlsx(
     """
 
     async with AsyncSession(db) as session:
-        source = (await session.exec(select(ProjectSource).where(ProjectSource.type == "xslx"))).first()
+        source = (await session.exec(select(ProjectSource).where(ProjectSource.type == "xlsx"))).first()
 
     variables = {
         "schemaCategoryId": schema_categories[0].id,
         "sourceId": source.id,
         "objectIds": ["0", "2"],
         "units": [Unit.M2.name, Unit.M3.name],
-        "quantities": ["123,456", "456,789"],
+        "quantities": [123.456, 456.789],
     }
 
     data = await get_response(client, mutation, variables=variables)

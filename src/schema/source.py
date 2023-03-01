@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class ProjectSourceType(Enum):
     CSV = "csv"
     SPECKLE = "speckle"
-    XSLX = "xslx"
+    XLSX = "xlsx"
 
 
 @strawberry.type
@@ -58,12 +58,12 @@ class GraphQLProjectSource:
 
     @strawberry.field
     def file_url(self) -> str | None:
-        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XSLX.value):
+        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XLSX.value):
             return self.meta_fields.get("url") + "/" + self.data_id
 
     @strawberry.field
     def data(self: "ProjectSource") -> GraphQLSourceFile | None:
-        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XSLX.value):
+        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XLSX.value):
             headers, rows = self.data
             return GraphQLSourceFile(headers=headers, rows=rows)
 

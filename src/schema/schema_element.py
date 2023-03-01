@@ -251,7 +251,7 @@ async def add_schema_element_from_source_mutation(
     source_id: str,
     object_ids: list[str],
     units: Optional[list[Unit]] = None,
-    quantities: Optional[list[str]] = None,
+    quantities: Optional[list[float]] = None,
 ):
     """Add a Schema Element to a Schema Category from with data from a Project Source"""
 
@@ -261,7 +261,7 @@ async def add_schema_element_from_source_mutation(
     source = await session.get(models_source.ProjectSource, source_id)
     if source.type == schema_source.ProjectSourceType.SPECKLE.name:
         elements = await speckle_to_elements(elements, object_ids, schema_category, schema_category_id, source)
-    elif source.type in (schema_source.ProjectSourceType.CSV.value, schema_source.ProjectSourceType.XSLX.value):
+    elif source.type in (schema_source.ProjectSourceType.CSV.value, schema_source.ProjectSourceType.XLSX.value):
         elements = await file_data_to_elements(schema_category_id, source, object_ids, quantities, units)
     else:
         raise SourceElementCreationError(
@@ -372,7 +372,7 @@ async def file_data_to_elements(
     schema_category_id: str,
     source: models_source.ProjectSource,
     objects_ids: list[str],
-    quantities: list[str],
+    quantities: list[float],
     units: list[Unit],
 ):
     elements = []
@@ -398,7 +398,7 @@ async def file_data_to_elements(
                     description=row[interpretation.get("description", "description")]
                     if "description" in interpretation
                     else None,
-                    quantity=float(quantities[idx].replace(",", ".")) if quantities[idx] else 0,
+                    quantity=quantities[idx] if quantities[idx] else 0,
                     unit=units[idx].value,
                     source_id=source.id,
                     schema_category_id=schema_category_id,

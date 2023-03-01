@@ -7,7 +7,6 @@ Create Date: 2022-11-16 12:39:03.383768
 """
 import sqlalchemy as sa
 import sqlmodel
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -27,9 +26,7 @@ def upgrade():
         "schematemplate",
         sa.Column("original_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     )
-    op.drop_constraint(
-        "schematemplate_schema_id_fkey", "schematemplate", type_="foreignkey"
-    )
+    op.drop_constraint("schematemplate_schema_id_fkey", "schematemplate", type_="foreignkey")
     op.create_foreign_key(
         "schematemplate_schema_original_id_fkey",
         "schematemplate",
@@ -47,9 +44,7 @@ def downgrade():
         "schematemplate",
         sa.Column("schema_id", sa.VARCHAR(), autoincrement=False, nullable=True),
     )
-    op.drop_constraint(
-        "schematemplate_schema_original_id_fkey", "schematemplate", type_="foreignkey"
-    )
+    op.drop_constraint("schematemplate_schema_original_id_fkey", "schematemplate", type_="foreignkey")
     op.create_foreign_key(
         "schematemplate_schema_id_fkey",
         "schematemplate",
