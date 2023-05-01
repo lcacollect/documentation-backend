@@ -12,13 +12,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  echo:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
-      - run: echo ${{ env.tag }}
-        env:
-          tag: ${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}
   test:
     uses: lcacollect/.github/.github/workflows/test-python.yaml@main
   publish-schema:
@@ -29,7 +22,7 @@ jobs:
     uses: lcacollect/.github/.github/workflows/build-image.yaml@main
     needs: test
     with:
-      tag: ${{ github.run_number }}
+      tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
       registry: "lcacollect"
       name: 'documentation'
   publish-chart:
@@ -39,6 +32,6 @@ jobs:
       - test
       - build-container
     with:
-      tag: ${{ github.run_number }}
+      tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
       registry: "lcacollect"
       name: 'documentation'
