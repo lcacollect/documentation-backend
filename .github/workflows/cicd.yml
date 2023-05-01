@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  NAME: documentation
+  NAME: 'documentation'
 
 jobs:
   echo:
