@@ -11,9 +11,6 @@ on:
       - stage
   workflow_dispatch:
 
-env:
-  container_name: 'documentation'
-
 jobs:
   echo:
     runs-on: ubuntu-latest
@@ -34,7 +31,7 @@ jobs:
     with:
       tag: ${{ github.run_number }}
       registry: "lcacollect"
-      name: ${{ env.container_name }}
+      name: 'documentation'
   publish-chart:
     if: github.event_name != 'pull_request'
     uses: lcacollect/.github/.github/workflows/publish-chart.yaml@main
@@ -44,4 +41,4 @@ jobs:
     with:
       tag: ${{ github.run_number }}
       registry: "lcacollect"
-      name: ${{ env.container_name }}
+      name: 'documentation'
