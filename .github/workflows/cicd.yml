@@ -13,9 +13,16 @@ on:
 
 env:
   NAME: "documentation"
-  TAG: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
+  TAG: "${{ github.run_number }}"
 
 jobs:
+  echo:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "${{ (github.ref_name != 'main' && '-dev') || ''}}"
+      - run: echo ${{ env.tag }}
+        env:
+          tag: ${{ (github.ref_name != 'main' && '-dev') || ''}}
   test:
     uses: lcacollect/.github/.github/workflows/test-python.yaml@main
   publish-schema:
