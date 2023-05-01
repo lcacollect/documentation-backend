@@ -50,6 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       repository-projects: read
+      contents: write
     steps:
       - name: "Send Webhook"
         run: |
