@@ -42,3 +42,21 @@ jobs:
       tag: "${{ github.run_number }}${{ (github.ref_name != 'main' && '-dev') || ''}}"
       registry: "lcacollect"
       name: 'documentation'
+  webhook:
+    if: github.event_name != 'pull_request'
+    needs:
+      - publish-schema
+      - publish-chart
+    runs-on: ubuntu-latest
+    permissions:
+      repository-projects: read
+    steps:
+      - name: "Send Webhook"
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/lcacollect/router-backend/dispatches \
+            -d '{"event_type":"workflow_completed","client_payload":{"branch":"${{ github.ref_name}}", "repo":"documentation"}}'
