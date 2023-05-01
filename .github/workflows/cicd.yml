@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  NAME: 'documentation'
+  container_name: 'documentation'
 
 jobs:
   echo:
@@ -34,7 +34,7 @@ jobs:
     with:
       tag: ${{ github.run_number }}
       registry: "lcacollect"
-      name: ${{ env.NAME }}
+      name: ${{ env.container_name }}
   publish-chart:
     if: github.event_name != 'pull_request'
     uses: lcacollect/.github/.github/workflows/publish-chart.yaml@main
@@ -44,4 +44,4 @@ jobs:
     with:
       tag: ${{ github.run_number }}
       registry: "lcacollect"
-      name: ${{ env.NAME }}
+      name: ${{ env.container_name }}
