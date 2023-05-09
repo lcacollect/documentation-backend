@@ -11,6 +11,7 @@ on:
       - stage
   workflow_dispatch:
 
+
 jobs:
   test:
     uses: lcacollect/.github/.github/workflows/test-python.yaml@main
@@ -21,10 +22,10 @@ jobs:
     with:
       name: 'documentation'
       branch: ${{ github.ref_name }}
-      storage-account: ${{ vars.PRODUCTION_STORAGE_ACCOUNT }}
-      container-name: ${{ vars.GRAPHQL_CONTAINER_NAME }}
+      storage_account: ${{ vars.PRODUCTION_STORAGE_ACCOUNT }}
+      container_name: ${{ vars.GRAPHQL_CONTAINER_NAME }}
     secrets:
-      azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
+      azure_credentials: ${{ secrets.AZURE_CREDENTIALS }}
   build-container:
     uses: lcacollect/.github/.github/workflows/build-image.yaml@main
     needs: test
@@ -48,9 +49,7 @@ jobs:
       - publish-schema
       - publish-chart
     runs-on: ubuntu-latest
-    permissions:
-      repository-projects: read
-      contents: write
+    permissions: write-all
     steps:
       - name: "Send Webhook"
         run: |
