@@ -51,6 +51,6 @@ jobs:
     uses: lcacollect/.github/.github/workflows/send-dispatch.yaml@main
     with:
       repo_name: 'documentation'
-      receiver_repo: 'lcacollec/router-backend'
+      receiver_repo: 'lcacollect/router-backend'
     secrets:
       dispatch_token: ${{ secrets.DISPATCH_TOKEN }}
