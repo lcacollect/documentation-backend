@@ -146,3 +146,24 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.backend.speckleTokenSecret.name }}
                   key: secret
+
+            - name: SENDGRID_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.emailSecret.name }}
+                  key: secret
+            
+            - name: AAD_GRAPH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.backend.aadGraphSecret.name }}
+                  key: secret
+            
+            - name: EMAIL_NOTIFICATION_FROM
+              value: {{ .Values.backend.emailNotificationFrom }}
+            
+            - name: INTERNAL_EMAIL_DOMAINS_LIST
+              value: '{{ .Values.backend.internalEmailDomains }}'
+            
+            - name: DEFAULT_AD_FQDN
+              value: {{ .Values.backend.defaultAdFQDN }}

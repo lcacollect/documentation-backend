@@ -87,13 +87,6 @@ class CommitFilters(BaseFilter):
 
 
 @strawberry.input
-class CommitSort(BaseFilter):
-    id: Optional[SortOptions] = None
-    short_id: Optional[SortOptions] = None
-    added: Optional[SortOptions] = None
-
-
-@strawberry.input
 class TagFilters(BaseFilter):
     id: Optional[FilterOptions] = None
     short_id: Optional[FilterOptions] = None
