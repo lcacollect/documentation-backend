@@ -3,10 +3,10 @@ from typing import Callable
 
 import pytest
 from httpx import AsyncClient
+from lcacollect_config.email import EmailType
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.config import settings
 from models.commit import Commit
 from models.task import Task
 
@@ -80,7 +80,11 @@ async def test_create_task(
     member_mocker,
     group_exists_mock,
     get_response: Callable,
+    mocker,
 ):
+    users_mock = mocker.patch("schema.task.get_users_from_azure")
+    users_mock.return_value = [{"email": "test"}]
+    email_mock = mocker.patch("schema.task.send_email")
     task_item = f"""{{id: "{schema_elements[0].id}", type: Element}}"""
     assignee = f"""{{id: "0dfa3-43234-23sdfd", type: PROJECT_MEMBER}}"""
     mutation = f"""
@@ -120,6 +124,13 @@ async def test_create_task(
         commits_after = commits_after.all()
     assert len(commits_after) > len(tasks)
 
+    assert len(users_mock.mock_calls) == 1
+    assert users_mock.mock_calls[0][1] == ("0dfa3-43234-23sdfd",)
+
+    assert len(email_mock.mock_calls) == 1
+    assert email_mock.mock_calls[0][1] == ("test", EmailType.TASK_ASSIGN)
+    assert email_mock.mock_calls[0][2] == {"task": "test"}
+
 
 @pytest.mark.asyncio
 async def test_create_task_category(
@@ -132,7 +143,11 @@ async def test_create_task_category(
     member_mocker,
     group_exists_mock,
     get_response: Callable,
+    mocker,
 ):
+    users_mock = mocker.patch("schema.task.get_users_from_azure")
+    email_mock = mocker.patch("schema.task.send_email")
+
     assignee = f"""{{id: "0dfa3-43234-23sdfd", type: USER}}"""
     task_item = f"""{{id: "{schema_categories[0].id}", type: Category}}"""
     mutation = f"""
@@ -174,6 +189,9 @@ async def test_create_task_category(
         commits_after = commits_after.all()
     assert len(commits_after) > len(tasks)
 
+    assert len(users_mock.mock_calls) == 0
+    assert len(email_mock.mock_calls) == 0
+
 
 @pytest.mark.asyncio
 async def test_update_task(
@@ -186,7 +204,12 @@ async def test_update_task(
     member_mocker,
     group_exists_mock,
     get_response: Callable,
+    mocker,
 ):
+    users_mock = mocker.patch("schema.task.get_users_from_azure")
+    users_mock.return_value = [{"email": "test"}]
+    email_mock = mocker.patch("schema.task.send_email")
+
     task_item = f"""{{id: "{schema_categories[1].id}", type: Category}}"""
     assignee = f"""{{id: "0dfa3-43234-23sdfd", type: PROJECT_MEMBER}}"""
     mutation = f"""
@@ -222,6 +245,13 @@ async def test_update_task(
         "status": "PENDING",
         "item": {"id": f"{schema_categories[1].id}", "name": "Schema Category 1"},
     }
+
+    assert len(users_mock.mock_calls) == 1
+    assert users_mock.mock_calls[0][1] == ("0dfa3-43234-23sdfd",)
+
+    assert len(email_mock.mock_calls) == 1
+    assert email_mock.mock_calls[0][1] == ("test", EmailType.TASK_ASSIGN)
+    assert email_mock.mock_calls[0][2] == {"task": "update"}
 
 
 @pytest.mark.asyncio

@@ -7,7 +7,6 @@ Create Date: 2022-10-03 16:11:43.239732
 """
 import sqlalchemy as sa
 import sqlmodel
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -22,9 +21,7 @@ def upgrade():
     op.create_table(
         "repository",
         sa.Column("id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "reporting_schema_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("reporting_schema_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.ForeignKeyConstraint(
             ["reporting_schema_id"],
             ["reportingschema.id"],
@@ -51,9 +48,7 @@ def upgrade():
     )
     op.create_table(
         "categorycommitlink",
-        sa.Column(
-            "schema_category_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("schema_category_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("commit_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["commit_id"],
@@ -67,9 +62,7 @@ def upgrade():
     )
     op.create_table(
         "elementcommitlink",
-        sa.Column(
-            "schema_element_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("schema_element_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("commit_id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["commit_id"],

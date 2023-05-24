@@ -48,7 +48,6 @@ class GraphQLReportingCreationSchema:
 async def query_reporting_schemas(
     info: Info, project_id: str, filters: Optional[ReportingSchemaFilters] = None
 ) -> list[GraphQLReportingSchema]:
-
     """Query a reporting schema using project_id"""
 
     session = get_session(info)
@@ -76,7 +75,6 @@ async def add_reporting_schema_mutation(
     project_id: str,
     name: Optional[str] = None,
 ) -> GraphQLReportingCreationSchema:
-
     """
     Add a Reporting Schema to a project.
     Concurrently updates the Schema Template to
@@ -120,7 +118,6 @@ async def add_reporting_schema_mutation(
 async def add_reporting_schema_from_template_mutation(
     info: Info, template_id: str, project_id: str, name: Optional[str]
 ) -> GraphQLReportingCreationSchema:
-
     """Copy a Reporting Schema from a template to a project"""
 
     session = info.context.get("session")
@@ -176,7 +173,6 @@ async def add_reporting_schema_from_template_mutation(
 async def update_reporting_schema_mutation(
     info: Info, id: str, name: Optional[str] = None, project_id: Optional[str] = None
 ) -> GraphQLReportingSchema:
-
     """Update a Reporting Schema"""
 
     session = info.context.get("session")
@@ -204,7 +200,6 @@ async def update_reporting_schema_mutation(
 
 
 async def delete_reporting_schema_mutation(info: Info, id: str) -> str:
-
     """Delete a Reporting Schema"""
 
     session = get_session(info)
@@ -216,7 +211,6 @@ async def delete_reporting_schema_mutation(info: Info, id: str) -> str:
 
 
 async def graphql_options(info, query):
-
     """
     Optionally "select IN" loads the needed collections of a
     Reporting Schema based on the request provided in the info
@@ -242,7 +236,6 @@ async def graphql_options(info, query):
 
 
 def update_category_paths(categories, path_map, session):
-
     """
     Updates the Schema Category paths whenever a Reporting Schema is added
     from a Schema Template to match the Schema Category IDs

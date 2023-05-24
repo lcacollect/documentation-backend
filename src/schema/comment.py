@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Annotated, Optional
 import strawberry
 from aiocache import cached
 from lcacollect_config.context import get_session, get_user
+from lcacollect_config.email import EmailType, send_email
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
+from lcacollect_config.user import get_users_from_azure
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info
@@ -48,7 +50,6 @@ async def query_comments(info: Info, task_id: str, filters: Optional[CommentFilt
 
 
 async def add_comment_mutation(info: Info, task_id: str, text: str) -> GraphQLComment:
-
     """Add a comment to a task"""
 
     task = await authenticate_comment(info, task_id)
@@ -69,18 +70,27 @@ async def add_comment_mutation(info: Info, task_id: str, text: str) -> GraphQLCo
     await session.commit()
     await session.refresh(comment)
 
+    # send email notification
+    assignee_email = ""
+    users = await get_users_from_azure(task.assignee_id)
+    if len(users):
+        assignee_email = users[0].get("email")
+    if assignee_email:
+        info.context["background_tasks"].add_task(
+            send_email, assignee_email, EmailType.TASK_COMMENT, **{"task": task.name, "comment": text}
+        )
+
     return comment
 
 
 async def update_comment_mutation(info: Info, id: str, text: str) -> GraphQLComment:
-
     """Update a task comment"""
 
     session = get_session(info)
     comment = await session.get(models_comment.Comment, id)
     if not comment:
         raise DatabaseItemNotFound(f"Could not find Comment with id: {id}")
-    await authenticate_comment(info, comment.task_id)
+    task = await authenticate_comment(info, comment.task_id)
 
     kwargs = {"text": text}
     for key, value in kwargs.items():
@@ -98,6 +108,17 @@ async def update_comment_mutation(info: Info, id: str, text: str) -> GraphQLComm
         .options(selectinload(models_comment.Comment.task))
     )
     await session.exec(query)
+
+    # send email notification
+    assignee_email = ""
+    users = await get_users_from_azure(task.assignee_id)
+    if len(users):
+        assignee_email = users[0].get("email")
+    if assignee_email:
+        info.context["background_tasks"].add_task(
+            send_email, assignee_email, EmailType.TASK_COMMENT, **{"task": task.name, "comment": text}
+        )
+
     return comment
 
 
@@ -115,7 +136,6 @@ async def delete_comment_mutation(info: Info, id: str) -> str:
 
 @cached(ttl=60, key_builder=lambda function, *args, **kwargs: f"{function.__name__}_{args[1]}")
 async def authenticate_comment(info: Info, task_id: str) -> models_task.Task:
-
     """Authenticates the user trying to access a comment"""
 
     session = get_session(info)

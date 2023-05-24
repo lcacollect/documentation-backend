@@ -30,7 +30,6 @@ class ReportingSchemaInput:
 async def query_schema_templates(
     info: Info, filters: Optional[SchemaTemplateFilters] = None
 ) -> list[GraphQLSchemaTemplate]:
-
     """Query Schema Templates"""
 
     session = info.context.get("session")
@@ -50,7 +49,6 @@ async def query_schema_templates(
 
 
 async def add_schema_template_mutation(info: Info, name: str) -> GraphQLSchemaTemplate:
-
     """Add a Schema Template"""
 
     session = info.context.get("session")
@@ -67,7 +65,6 @@ async def add_schema_template_mutation(info: Info, name: str) -> GraphQLSchemaTe
 
 
 async def update_schema_template_mutation(info: Info, id: str, name: Optional[str] = None) -> GraphQLSchemaTemplate:
-
     """Update a Schema Template"""
 
     session = info.context.get("session")
@@ -93,7 +90,6 @@ async def update_schema_template_mutation(info: Info, id: str, name: Optional[st
 
 
 async def delete_schema_template_mutation(info: Info, id: str) -> str:
-
     """Delete a Schema Template"""
 
     session = info.context.get("session")
@@ -104,7 +100,6 @@ async def delete_schema_template_mutation(info: Info, id: str) -> str:
 
 
 def is_project_member(info: Info, members) -> bool:
-
     """
     Check whether the user trying to mutate/query
     is a member of that project and/or an admin user.

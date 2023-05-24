@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 class ProjectSourceType(Enum):
     CSV = "csv"
     SPECKLE = "speckle"
+    XLSX = "xlsx"
 
 
 @strawberry.type
@@ -57,12 +58,12 @@ class GraphQLProjectSource:
 
     @strawberry.field
     def file_url(self) -> str | None:
-        if self.type == ProjectSourceType.CSV.value:
+        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XLSX.value):
             return self.meta_fields.get("url") + "/" + self.data_id
 
     @strawberry.field
     def data(self: "ProjectSource") -> GraphQLSourceFile | None:
-        if self.type == ProjectSourceType.CSV.value:
+        if self.type in (ProjectSourceType.CSV.value, ProjectSourceType.XLSX.value):
             headers, rows = self.data
             return GraphQLSourceFile(headers=headers, rows=rows)
 
@@ -100,7 +101,6 @@ async def add_project_source_mutation(
     speckle_url: str | None = None,
     file: str | None = None,
 ) -> GraphQLProjectSource:
-
     """Add a Project Source"""
 
     session = get_session(info)
@@ -144,7 +144,6 @@ async def update_project_source_mutation(
     interpretation: Optional[JSON] = None,
     speckle_url: str | None = None,
 ) -> GraphQLProjectSource:
-
     """Update a Project Source"""
 
     session: AsyncSession = info.context.get("session")
@@ -197,7 +196,6 @@ async def update_project_source_mutation(
 
 
 async def delete_project_source_mutation(info: Info, id: str) -> str:
-
     """Delete a project source"""
 
     session = info.context.get("session")
@@ -209,7 +207,6 @@ async def delete_project_source_mutation(info: Info, id: str) -> str:
 
 
 async def handle_file_upload(file: str, project_source: models_source.ProjectSource) -> str:
-
     """Handle the source file upload"""
 
     data = base64.b64decode(file)
@@ -220,9 +217,8 @@ async def handle_file_upload(file: str, project_source: models_source.ProjectSou
 
 
 async def upload_to_storage_account(data: str | bytes) -> str:
-
     """
-    Upload csv file to Azure Storage Account Blob Container
+    Upload file to Azure Storage Account Blob Container
 
     Returns:
         Path to the file in blob container.
@@ -257,7 +253,6 @@ async def upload_to_storage_account(data: str | bytes) -> str:
 
 
 async def invite_members_to_stream(email: str, stream_id: str, speckle_url: str):
-
     """Invites a member to be a part of the Speckle Stream"""
 
     client = get_speckle_client(speckle_url)
@@ -269,7 +264,6 @@ async def invite_members_to_stream(email: str, stream_id: str, speckle_url: str)
 
 
 async def remove_members_from_stream(stream_id: str, speckle_url: str):
-
     """Removes all members of a Speckle Stream"""
 
     client = get_speckle_client(speckle_url)
@@ -281,7 +275,6 @@ async def remove_members_from_stream(stream_id: str, speckle_url: str):
 
 
 def get_speckle_client(speckle_url: str) -> SpeckleClient:
-
     """Fetches the Speckle Client object"""
 
     client = SpeckleClient(speckle_url)

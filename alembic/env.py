@@ -3,12 +3,12 @@ import pathlib
 import sys
 from logging.config import fileConfig
 
+from alembic import context
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel import SQLModel, create_engine
-
-from alembic import context
 
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1] / "src"))
 
@@ -77,9 +77,7 @@ async def run_migrations_online():
     and associate a connection with the context.
 
     """
-    connectable = AsyncEngine(
-        create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True, future=True)
-    )
+    connectable = AsyncEngine(create_engine(settings.SQLALCHEMY_DATABASE_URI, echo=True, future=True))
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

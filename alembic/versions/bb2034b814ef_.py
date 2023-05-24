@@ -7,9 +7,8 @@ Create Date: 2022-10-07 16:20:50.453537
 """
 import sqlalchemy as sa
 import sqlmodel
-from sqlalchemy.dialects import postgresql
-
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "bb2034b814ef"
@@ -28,9 +27,7 @@ def upgrade():
         "schemaelement",
         sa.Column("source_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     )
-    op.create_foreign_key(
-        "element_source_link", "schemaelement", "projectsource", ["source_id"], ["id"]
-    )
+    op.create_foreign_key("element_source_link", "schemaelement", "projectsource", ["source_id"], ["id"])
     # ### end Alembic commands ###
 
 

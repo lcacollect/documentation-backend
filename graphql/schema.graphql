@@ -1,4 +1,4 @@
-schema @link(url: "https://specs.apollo.dev/federation/v2.0", import: ["@key", "@shareable"]) {
+schema @link(url: "https://specs.apollo.dev/federation/v2.3", import: ["@key", "@shareable"]) {
   query: Query
   mutation: Mutation
 }
@@ -35,6 +35,7 @@ input FilterOptions {
   isEmpty: Boolean = null
   isNotEmpty: Boolean = null
   isAnyOf: [String!] = null
+  jsonContains: String = null
 }
 
 input GraphQLAssignee {
@@ -210,7 +211,7 @@ type Mutation {
   addSchemaElement(schemaCategoryId: String!, name: String!, quantity: Float!, unit: Unit!, description: String!): GraphQLSchemaElement!
 
   """Add a Schema Element to a Schema Category"""
-  addSchemaElementFromSource(schemaCategoryId: String!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [String!] = null): [GraphQLSchemaElement!]!
+  addSchemaElementFromSource(schemaCategoryId: String!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
 
   """Update a Schema Element"""
   updateSchemaElement(id: String!, name: String = null, schemaCategoryId: String = null, quantity: Float = null, unit: Unit = null, description: String = null, result: JSON = null): GraphQLSchemaElement!
@@ -264,6 +265,7 @@ input ProjectSourceFilters {
 enum ProjectSourceType {
   CSV
   SPECKLE
+  XLSX
 }
 
 type Query {

@@ -15,7 +15,6 @@ async def test_project_sources_query(
     project_exists_mock,
     get_response: Callable,
 ):
-
     query = """
         query($projectId: String!) {
             projectSources(projectId: $projectId) {
@@ -49,7 +48,6 @@ async def test_project_sources_query_filters(
     project_exists_mock,
     get_response: Callable,
 ):
-
     query = """
         query($projectId: String!, $name: String!) {
             projectSources(projectId: $projectId, filters: {name: {equal: $name}}) {
@@ -71,7 +69,7 @@ async def test_project_sources_query_filters(
     }
 
 
-async def test_add_file_source_mutation(
+async def test_add_CSV_file_source_mutation(
     client: AsyncClient,
     project_sources,
     member_mocker,
@@ -110,6 +108,46 @@ async def test_add_file_source_mutation(
     }
 
 
+async def test_add_XLSX_file_source_mutation(
+    client: AsyncClient,
+    project_sources,
+    member_mocker,
+    blob_client_mock_async,
+    project_exists_mock,
+    get_response: Callable,
+):
+    query = f"""
+        mutation {{
+            addProjectSource(
+                projectId: "10"
+                type: XLSX
+                file: "aW0gYSBmaWxlLCBhIGNzdiBmaWxl"
+                name: "some_name"
+            ) {{
+                projectId
+                type
+                dataId
+                name
+                authorId
+                metaFields
+                fileUrl
+            }}
+        }}
+    """
+
+    data = await get_response(client, query)
+    assert data["addProjectSource"] == {
+        "projectId": "10",
+        "type": f"{ProjectSourceType.XLSX.name}",
+        "dataId": "test/ba/ef/70c78b30e27266c4f5368bfb0938a03a17870355fd1558ca36ec45ddf851",
+        "name": "some_name",
+        "metaFields": {"url": "PLACEHOLDER/PALCEHOLDER"},
+        "fileUrl": "PLACEHOLDER/PALCEHOLDER/test/ba/ef/70c78b30e27266c4f5368bfb0938a03a17870355fd1558ca36ec45ddf851",
+        "authorId": "someid0",
+    }
+
+
+@pytest.mark.skip("Speckle isn't implemented")
 async def test_add_speckle_source_mutation(
     client: AsyncClient,
     project_sources,

@@ -3,11 +3,10 @@ from typing import Callable
 
 import pytest
 from httpx import AsyncClient
+from lcacollect_config.email import EmailType
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.config import settings
-from core.federation import GraphQLProjectMember
 from models.comment import Comment
 
 
@@ -31,7 +30,10 @@ async def test_get_comments(client: AsyncClient, comments, tasks, member_mock, g
 
 
 @pytest.mark.asyncio
-async def test_create_comment(client: AsyncClient, tasks, member_mock, get_response: Callable):
+async def test_create_comment(client: AsyncClient, tasks, member_mock, get_response: Callable, mocker):
+    users_mock = mocker.patch("schema.comment.get_users_from_azure")
+    users_mock.return_value = [{"email": "test"}]
+    email_mock = mocker.patch("schema.comment.send_email")
     mutation = """
         mutation($taskId: String!, $text: String!) {
             addComment(taskId: $taskId, text: $text) {
@@ -50,9 +52,19 @@ async def test_create_comment(client: AsyncClient, tasks, member_mock, get_respo
         "text": "lovely",
     }
 
+    assert len(users_mock.mock_calls) == 1
+    assert users_mock.mock_calls[0][0] == ""
+
+    assert len(email_mock.mock_calls) == 1
+    assert email_mock.mock_calls[0][1] == ("test", EmailType.TASK_COMMENT)
+    assert email_mock.mock_calls[0][2] == {"task": "Name 0", "comment": "lovely"}
+
 
 @pytest.mark.asyncio
-async def test_update_comment(client: AsyncClient, comments, member_mock, get_response: Callable):
+async def test_update_comment(client: AsyncClient, comments, member_mock, get_response: Callable, mocker):
+    users_mock = mocker.patch("schema.comment.get_users_from_azure")
+    users_mock.return_value = [{"email": "test"}]
+    email_mock = mocker.patch("schema.comment.send_email")
     query = """
         mutation($id: String!, $text: String!) {
             updateComment(id: $id, text: $text) {
@@ -64,6 +76,13 @@ async def test_update_comment(client: AsyncClient, comments, member_mock, get_re
 
     data = await get_response(client, query, variables=variables)
     assert data["updateComment"] == {"text": "updated"}
+
+    assert len(users_mock.mock_calls) == 1
+    assert users_mock.mock_calls[0][0] == ""
+
+    assert len(email_mock.mock_calls) == 1
+    assert email_mock.mock_calls[0][1] == ("test", EmailType.TASK_COMMENT)
+    assert email_mock.mock_calls[0][2] == {"task": "Name 0", "comment": "updated"}
 
 
 @pytest.mark.asyncio

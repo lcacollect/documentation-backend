@@ -7,7 +7,6 @@ Create Date: 2022-10-24 11:10:45.381935
 """
 import sqlalchemy as sa
 import sqlmodel
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -25,9 +24,7 @@ def upgrade():
     )
     op.add_column(
         "task",
-        sa.Column(
-            "assigned_group_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True
-        ),
+        sa.Column("assigned_group_id", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     )
     # ### end Alembic commands ###
 
