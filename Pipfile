@@ -19,7 +19,6 @@ aiohttp = "*"
 azure-storage-blob = "*"
 aiocache = "*"
 pandas = "*"
-numpy = "*"
 openpyxl = "*"
 
 [dev-packages]
