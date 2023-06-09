@@ -40,7 +40,6 @@ pytest-alembic = "*"
 pytest-mock = "*"
 psycopg2-binary = "*"
 pytest-cov = "*"
-pytest-azurepipelines = "*"
 debugpy = "*"
 
 [requires]
