@@ -214,7 +214,6 @@ async def delete_schema_element_mutation(info: Info, id: str) -> str:
         commit.schema_elements.remove(schema_element)
     except ValueError as err:
         pass
-        # logger.warn(f"Element not in commit: {err}")
     else:
         session.add(commit)
 
