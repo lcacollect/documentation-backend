@@ -126,6 +126,18 @@ async def add_project_source_mutation(
     if file:
         project_source.data_id = await handle_file_upload(file, project_source)
 
+    default_interpretation = {
+        "KG": "kg",
+        "M": "m",
+        "M2": "m2",
+        "M3": "m3",
+        "PCS": "pcs",
+        "description": "Description",
+        "interpretationName": "Name"
+    }
+    
+    project_source.interpretation = default_interpretation
+    
     session.add(project_source)
 
     await session.commit()
