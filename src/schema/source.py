@@ -133,11 +133,11 @@ async def add_project_source_mutation(
         "M3": "m3",
         "PCS": "pcs",
         "description": "Description",
-        "interpretationName": "Name"
+        "interpretationName": "Name",
     }
-    
+
     project_source.interpretation = default_interpretation
-    
+
     session.add(project_source)
 
     await session.commit()
