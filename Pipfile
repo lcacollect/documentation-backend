@@ -15,7 +15,6 @@ tenacity = "*"
 sqlalchemy = {extras = ["asyncio"], version = "==1.4.35"}
 lcacollect-config = "*"
 specklepy = "*"
-aiohttp = "*"
 azure-storage-blob = "*"
 aiocache = "*"
 pandas = "*"
