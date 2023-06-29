@@ -112,8 +112,8 @@ type GraphQLSchemaCategory {
   depth: Int!
 }
 
-type GraphQLSchemaElement {
-  id: String!
+type GraphQLSchemaElement @key(fields: "id") {
+  id: ID!
   name: String!
   quantity: Float!
   unit: Unit!
@@ -121,6 +121,7 @@ type GraphQLSchemaElement {
   schemaCategory: GraphQLSchemaCategory!
   commits: [GraphQLCommit!]!
   source: GraphQLProjectSource
+  assemblyId: String @shareable
   result: JSON
 }
 
@@ -208,13 +209,13 @@ type Mutation {
   deleteSchemaCategory(id: String!): String!
 
   """Add a Schema Element to a Schema Category"""
-  addSchemaElement(schemaCategoryId: String!, name: String!, quantity: Float!, unit: Unit!, description: String!): GraphQLSchemaElement!
+  addSchemaElement(schemaCategoryId: String!, name: String!, quantity: Float!, unit: Unit!, description: String!, assemblyId: String = null): GraphQLSchemaElement!
 
   """Add a Schema Element to a Schema Category"""
   addSchemaElementFromSource(schemaCategoryId: String!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
 
   """Update a Schema Element"""
-  updateSchemaElement(id: String!, name: String = null, schemaCategoryId: String = null, quantity: Float = null, unit: Unit = null, description: String = null, result: JSON = null): GraphQLSchemaElement!
+  updateSchemaElement(id: String!, name: String = null, schemaCategoryId: String = null, quantity: Float = null, unit: Unit = null, description: String = null, result: JSON = null, assemblyId: String = null): GraphQLSchemaElement!
 
   """Delete a Schema Element"""
   deleteSchemaElement(id: String!): String!
@@ -285,7 +286,7 @@ type Query {
   schemaCategories(reportingSchemaId: String!, commitId: String = null, filters: SchemaCategoryFilters = null): [GraphQLSchemaCategory!]!
 
   """Get all schema elements for a list of categories"""
-  schemaElements(schemaCategoryIds: [String!]!, commitId: String = null, filters: SchemaElementFilters = null): [GraphQLSchemaElement!]!
+  schemaElements(schemaCategoryIds: [String!]!, elementId: String = null, commitId: String = null, filters: SchemaElementFilters = null): [GraphQLSchemaElement!]!
 
   """Get all commits of a Reporting Schema"""
   commits(reportingSchemaId: String!, filters: CommitFilters = null): [GraphQLCommit!]!
@@ -370,7 +371,7 @@ enum Unit {
 
 scalar _Any
 
-union _Entity = GraphQLProjectMember | GraphQLProjectSource | GraphQLTask | GraphQLComment
+union _Entity = GraphQLProjectMember | GraphQLProjectSource | GraphQLSchemaElement | GraphQLTask | GraphQLComment
 
 type _Service {
   sdl: String!

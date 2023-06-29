@@ -180,7 +180,7 @@ async def test_create_schema_element(
 ):
     mutation = """
         mutation addElement($schemaCategoryId: String!) {
-            addSchemaElement(name: "Schema Element 0", schemaCategoryId: $schemaCategoryId, unit: M2, quantity: 1, description: "" ) {
+            addSchemaElement(name: "Schema Element 0", schemaCategoryId: $schemaCategoryId, unit: M2, quantity: 1, description: "", assemblyId: "assembly-Id" ) {
                 name
                 schemaCategory {
                     id
@@ -188,6 +188,7 @@ async def test_create_schema_element(
                 quantity
                 unit
                 description
+                assemblyId
             }
         }
     """
@@ -205,6 +206,7 @@ async def test_create_schema_element(
         "quantity": 1.0,
         "unit": Unit.M2.name,
         "description": "",
+        "assemblyId": "assembly-Id",
     }
     async with AsyncSession(db) as session:
         query = select(Commit)
@@ -226,13 +228,14 @@ async def test_update_schema_element(
     get_response: Callable,
 ):
     mutation = """
-        mutation updateElement($id: String! $quantity: Float!, $unit: Unit!, $description: String!) {
-            updateSchemaElement(id: $id, quantity: $quantity, unit: $unit, description: $description) {
+        mutation updateElement($id: String! $quantity: Float!, $unit: Unit!, $description: String!, $assemblyId: String!) {
+            updateSchemaElement(id: $id, quantity: $quantity, unit: $unit, description: $description, assemblyId: $assemblyId) {
                 id
                 quantity
                 unit
                 name
                 description
+                assemblyId
             }
         }
     """
@@ -241,6 +244,7 @@ async def test_update_schema_element(
         "description": "Description 1",
         "quantity": 1.0,
         "unit": Unit.M3.name,
+        "assemblyId": "assembly-Id",
     }
 
     async with AsyncSession(db) as session:
@@ -255,6 +259,7 @@ async def test_update_schema_element(
         "description": "Description 1",
         "quantity": 1.0,
         "unit": Unit.M3.name,
+        "assemblyId": "assembly-Id",
     }
 
     async with AsyncSession(db) as session:

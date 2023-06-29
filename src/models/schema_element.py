@@ -32,3 +32,5 @@ class SchemaElement(SQLModel, table=True):
     )
     source_id: Optional[str] = Field(foreign_key="projectsource.id", nullable=True)
     source: Optional["ProjectSource"] = Relationship(back_populates="elements")
+
+    assembly_id: str | None

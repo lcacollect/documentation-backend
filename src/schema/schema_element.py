@@ -50,9 +50,9 @@ class Unit(Enum):
     NONE = None
 
 
-@strawberry.type
+@strawberry.federation.type(keys=["id"])
 class GraphQLSchemaElement:
-    id: str
+    id: strawberry.ID
     name: str
     quantity: float
     unit: Unit
@@ -60,12 +60,14 @@ class GraphQLSchemaElement:
     schema_category: Annotated["GraphQLSchemaCategory", strawberry.lazy("schema.schema_category")]
     commits: list[Annotated["GraphQLCommit", strawberry.lazy("schema.commit")]]
     source: Annotated["GraphQLProjectSource", strawberry.lazy("schema.source")] | None
+    assembly_id: str | None = strawberry.federation.field(shareable=True)
     result: JSON | None
 
 
 async def query_schema_elements(
     info: Info,
     schema_category_ids: list[str],
+    element_id: Optional[str] = None,
     commit_id: Optional[str] = None,
     filters: Optional[SchemaElementFilters] = None,
 ) -> list[GraphQLSchemaElement]:
@@ -79,10 +81,14 @@ async def query_schema_elements(
             .options(selectinload(models_category.SchemaCategory.reporting_schema))
         )
     ).first()
-    await authenticate(info, schema_category.reporting_schema.project_id)
+
+    if schema_category:
+        await authenticate(info, schema_category.reporting_schema.project_id)
 
     if commit_id:
         query = select(models_element.SchemaElement).where(models_element.ElementCommitLink.commit_id == commit_id)
+    elif element_id:
+        query = select(models_element.SchemaElement).where(models_element.SchemaElement.id == element_id)
     else:
         query = select(models_element.SchemaElement).where(
             col(models_element.SchemaElement.schema_category_id).in_(schema_category_ids)
@@ -104,6 +110,7 @@ async def add_schema_element_mutation(
     quantity: float,
     unit: Unit,
     description: str,
+    assembly_id: Optional[str] = None,
 ) -> GraphQLSchemaElement:
     """Add a Schema Element to a Schema Category"""
 
@@ -117,6 +124,7 @@ async def add_schema_element_mutation(
         description=description,
         schema_category=schema_category,
         schema_category_id=schema_category_id,
+        assembly_id=assembly_id,
     )
 
     # adds the schema element to the commit
@@ -146,6 +154,7 @@ async def update_schema_element_mutation(
     unit: Unit | None = None,
     description: Optional[str] = None,
     result: Optional[JSON] = None,
+    assembly_id: Optional[str] = None,
 ) -> GraphQLSchemaElement:
     """Update a Schema Element"""
 
@@ -168,6 +177,7 @@ async def update_schema_element_mutation(
         "unit": unit.value if unit is not None else None,
         "description": description,
         "result": result,
+        "assembly_id": assembly_id,
     }
 
     for key, value in kwargs.items():

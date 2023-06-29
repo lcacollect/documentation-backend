@@ -99,11 +99,11 @@ async def test_create_task(
                 status
                 item {{
                         ... on GraphQLSchemaElement {{
-                            id
+                            elementId: id
                             quantity
                             }}
                         ... on GraphQLSchemaCategory {{
-                            id
+                            categoryId: id
                     }}
                 }}
             }}
@@ -116,7 +116,7 @@ async def test_create_task(
         "dueDate": datetime.date.today().strftime("%Y-%m-%d"),
         "id": data["addTask"]["id"],
         "status": "APPROVED",
-        "item": {"id": f"{schema_elements[0].id}", "quantity": 0.0},
+        "item": {"elementId": f"{schema_elements[0].id}", "quantity": 0.0},
     }
     async with AsyncSession(db) as session:
         query = select(Task)
@@ -162,11 +162,11 @@ async def test_create_task_category(
                 status
                 item {{
                         ... on GraphQLSchemaElement {{
-                            id
+                            elementId: id
                             quantity
                             }}
                         ... on GraphQLSchemaCategory {{
-                            id
+                            categoryId: id
                             name
                     }}
                 }}
@@ -181,7 +181,7 @@ async def test_create_task_category(
         "dueDate": datetime.date.today().strftime("%Y-%m-%d"),
         "id": data["addTask"]["id"],
         "status": "PENDING",
-        "item": {"id": f"{schema_categories[0].id}", "name": "Schema Category 0"},
+        "item": {"categoryId": f"{schema_categories[0].id}", "name": "Schema Category 0"},
     }
     async with AsyncSession(db) as session:
         query = select(Task)
@@ -224,11 +224,11 @@ async def test_update_task(
                 status
                 item {{
                         ... on GraphQLSchemaElement {{
-                            id
+                            elementId: id
                             quantity
                             }}
                         ... on GraphQLSchemaCategory {{
-                            id
+                            categoryId: id
                             name
                     }}
                 }}
@@ -243,7 +243,7 @@ async def test_update_task(
         "dueDate": datetime.date.today().strftime("%Y-%m-%d"),
         "id": tasks[0].id,
         "status": "PENDING",
-        "item": {"id": f"{schema_categories[1].id}", "name": "Schema Category 1"},
+        "item": {"categoryId": f"{schema_categories[1].id}", "name": "Schema Category 1"},
     }
 
     assert len(users_mock.mock_calls) == 1
