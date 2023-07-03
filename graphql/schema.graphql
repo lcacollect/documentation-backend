@@ -101,7 +101,7 @@ type GraphQLReportingSchema {
 }
 
 type GraphQLSchemaCategory {
-  id: String!
+  id: ID!
   name: String!
   description: String
   reportingSchemaId: String
@@ -212,7 +212,7 @@ type Mutation {
   addSchemaElement(schemaCategoryId: String!, name: String!, quantity: Float!, unit: Unit!, description: String!, assemblyId: String = null): GraphQLSchemaElement!
 
   """Add a Schema Element to a Schema Category"""
-  addSchemaElementFromSource(schemaCategoryId: String!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
+  addSchemaElementFromSource(schemaCategoryIds: [String!]!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
 
   """Update a Schema Element"""
   updateSchemaElement(id: String!, name: String = null, schemaCategoryId: String = null, quantity: Float = null, unit: Unit = null, description: String = null, result: JSON = null, assemblyId: String = null): GraphQLSchemaElement!

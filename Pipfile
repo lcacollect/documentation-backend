@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 fastapi = {extras = ["all"], version = "*"}
 uvicorn = {extras = ["standard"], version = "*"}
-strawberry-graphql = {extras = ["fastapi"], version = ">=0.134.0"}
+strawberry-graphql = {extras = ["fastapi", "cli"], version = ">=0.192.0"}
 fastapi-azure-auth = "*"
 asyncpg = "*"
 sqlmodel = "*"

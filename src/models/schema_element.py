@@ -34,3 +34,5 @@ class SchemaElement(SQLModel, table=True):
     source: Optional["ProjectSource"] = Relationship(back_populates="elements")
 
     assembly_id: str | None
+
+    meta_fields: dict = Field(default=None, sa_column=Column(JSON), nullable=False)

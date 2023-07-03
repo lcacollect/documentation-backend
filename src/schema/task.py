@@ -90,7 +90,7 @@ class GraphQLTask:
         else:
             schema_element = await session.get(models_category.SchemaElement, self.element_id)
             return GraphQLSchemaElement(
-                **schema_element.dict(exclude={"schema_category_id", "source_id"}),
+                **schema_element.dict(exclude={"schema_category_id", "source_id", "meta_fields"}),
                 schema_category=None,
                 source=None,
                 commits=[],
