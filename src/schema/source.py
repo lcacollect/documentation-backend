@@ -135,7 +135,7 @@ async def add_project_source_mutation(
         "description": "Description",
         "interpretationName": "Name",
         "id": "Id",
-        "typeCode": "Type Code"
+        "typeCode": "Type Code",
     }
 
     project_source.interpretation = default_interpretation
