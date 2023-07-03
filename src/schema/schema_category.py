@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @strawberry.type
 class GraphQLSchemaCategory:
-    id: str
+    id: strawberry.ID
     name: str
     description: str | None
     reporting_schema_id: str | None

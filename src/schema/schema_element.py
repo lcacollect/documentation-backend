@@ -65,11 +65,11 @@ class GraphQLSchemaElement:
 
 
 async def query_schema_elements(
-    info: Info,
-    schema_category_ids: list[str],
-    element_id: Optional[str] = None,
-    commit_id: Optional[str] = None,
-    filters: Optional[SchemaElementFilters] = None,
+        info: Info,
+        schema_category_ids: list[str],
+        element_id: Optional[str] = None,
+        commit_id: Optional[str] = None,
+        filters: Optional[SchemaElementFilters] = None,
 ) -> list[GraphQLSchemaElement]:
     """Get all schema elements for a list of categories"""
     session = get_session(info)
@@ -104,13 +104,13 @@ async def query_schema_elements(
 
 
 async def add_schema_element_mutation(
-    info: Info,
-    schema_category_id: str,
-    name: str,
-    quantity: float,
-    unit: Unit,
-    description: str,
-    assembly_id: Optional[str] = None,
+        info: Info,
+        schema_category_id: str,
+        name: str,
+        quantity: float,
+        unit: Unit,
+        description: str,
+        assembly_id: Optional[str] = None,
 ) -> GraphQLSchemaElement:
     """Add a Schema Element to a Schema Category"""
 
@@ -146,15 +146,15 @@ async def add_schema_element_mutation(
 
 
 async def update_schema_element_mutation(
-    info: Info,
-    id: str,
-    name: Optional[str] = None,
-    schema_category_id: Optional[str] = None,
-    quantity: Optional[float] = None,
-    unit: Unit | None = None,
-    description: Optional[str] = None,
-    result: Optional[JSON] = None,
-    assembly_id: Optional[str] = None,
+        info: Info,
+        id: str,
+        name: Optional[str] = None,
+        schema_category_id: Optional[str] = None,
+        quantity: Optional[float] = None,
+        unit: Unit | None = None,
+        description: Optional[str] = None,
+        result: Optional[JSON] = None,
+        assembly_id: Optional[str] = None,
 ) -> GraphQLSchemaElement:
     """Update a Schema Element"""
 
@@ -256,23 +256,24 @@ async def graphql_options(info, query, base_field: str = "schemaElements"):
 
 
 async def add_schema_element_from_source_mutation(
-    info: Info,
-    schema_category_id: str,
-    source_id: str,
-    object_ids: list[str],
-    units: Optional[list[Unit]] = None,
-    quantities: Optional[list[float]] = None,
+        info: Info,
+        schema_category_ids: list[str],
+        source_id: str,
+        object_ids: list[str],
+        units: Optional[list[Unit]] = None,
+        quantities: Optional[list[float]] = None,
 ):
     """Add a Schema Element to a Schema Category from with data from a Project Source"""
 
-    commit, schema_category, session = await fetch_models(info, schema_category_id)
+    commit, schema_category, session = await fetch_models(info, schema_category_ids[0])
     await authenticate(info, schema_category.reporting_schema.project_id)
     elements = []
     source = await session.get(models_source.ProjectSource, source_id)
     if source.type == schema_source.ProjectSourceType.SPECKLE.name:
-        elements = await speckle_to_elements(elements, object_ids, schema_category, schema_category_id, source)
+        raise NotImplementedError()
+        # elements = await speckle_to_elements(elements, object_ids, schema_category, schema_category_ids, source)
     elif source.type in (schema_source.ProjectSourceType.CSV.value, schema_source.ProjectSourceType.XLSX.value):
-        elements = await file_data_to_elements(schema_category_id, source, object_ids, quantities, units)
+        elements = await file_data_to_elements(schema_category_ids, source, object_ids, quantities, units)
     else:
         raise SourceElementCreationError(
             f"Can not add elements from source: {source.id} with source type: {source.type}"
@@ -297,7 +298,7 @@ async def add_schema_element_from_source_mutation(
 
 
 async def fetch_models(
-    info: Info, schema_category_id: str
+        info: Info, schema_category_id: str
 ) -> tuple[models_commit.Commit, models_category.SchemaCategory, AsyncSession]:
     """Fetches the latest commit and schema category"""
     session = get_session(info)
@@ -379,19 +380,20 @@ async def speckle_to_elements(elements, object_ids, schema_category, schema_cate
 
 
 async def file_data_to_elements(
-    schema_category_id: str,
-    source: models_source.ProjectSource,
-    objects_ids: list[str],
-    quantities: list[float],
-    units: list[Unit],
+        schema_category_ids: list[str],
+        source: models_source.ProjectSource,
+        objects_ids: list[str],
+        quantities: list[float],
+        units: list[Unit],
 ):
     elements = []
     interpretation = source.interpretation
     headers, file_data = source.data
 
-    if len(objects_ids) != len(quantities) or len(objects_ids) != len(units):
+    if len(objects_ids) != len(quantities) or len(objects_ids) != len(units) or len(objects_ids) != len(
+            schema_category_ids):
         raise SourceElementCreationError(
-            f"Number of object_ids: {len(objects_ids)} must match number of quantities: {len(quantities)} and units: {len(units)}"
+            f"Number of object_ids: {len(objects_ids)} must match number of quantities: {len(quantities)}, units: {len(units)} and schema_categories: {len(schema_category_ids)}"
         )
 
     for idx, object_id in enumerate(objects_ids):
@@ -411,7 +413,8 @@ async def file_data_to_elements(
                     quantity=quantities[idx] if quantities[idx] else 0,
                     unit=units[idx].value,
                     source_id=source.id,
-                    schema_category_id=schema_category_id,
+                    schema_category_id=schema_category_ids[idx],
+                    meta_fields={"source_object_index": interpretation.get("id", None)}
                 )
             )
         except KeyError as error:
