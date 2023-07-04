@@ -220,11 +220,15 @@ async def delete_schema_element_mutation(info: Info, id: str) -> str:
     commit, schema_category, _ = await fetch_models(info, schema_element.schema_category_id)
     await authenticate(info, schema_category.reporting_schema.project_id)
 
-    commit.schema_elements.remove(schema_element)
-    session.add(commit)
+    try:
+        commit.schema_elements.remove(schema_element)
+    except ValueError as err:
+        pass
+    else:
+        session.add(commit)
 
-    await session.commit()
-    await session.refresh(commit)
+        await session.commit()
+        await session.refresh(commit)
 
     await session.delete(schema_element)
     await session.commit()
