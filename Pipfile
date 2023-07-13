@@ -12,13 +12,14 @@ asyncpg = "*"
 sqlmodel = "*"
 alembic = "*"
 tenacity = "*"
+pydantic = "<2.0.0"
 sqlalchemy = {extras = ["asyncio"], version = "==1.4.35"}
 lcacollect-config = "*"
-specklepy = "*"
 azure-storage-blob = "*"
 aiocache = "*"
 pandas = "*"
 openpyxl = "*"
+lcax = "*"
 
 [dev-packages]
 pydevd-pycharm = "==222.4459.20"

@@ -380,7 +380,7 @@ type _Service {
 enum exportFormat {
   LCABYG
   CSV
-  LCAx
+  LCAX
 }
 
 input taskItem {

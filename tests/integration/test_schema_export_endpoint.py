@@ -4,6 +4,7 @@ from typing import Callable
 
 import pytest
 from httpx import AsyncClient
+from lcax.pydantic import LCAxProject
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -122,3 +123,38 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
         ]
     )
     assert csv_rows[1] == expected_data
+
+
+@pytest.mark.asyncio
+async def test_lcax_export(client, db, reporting_schemas, schema_elements, schema_categories):
+    query = """
+        query ExportReportingSchema($reportingSchemaId: String!, $exportFormat: exportFormat!){
+            exportReportingSchema(reportingSchemaId: $reportingSchemaId, exportFormat: $exportFormat)
+        }
+    """
+
+    async with AsyncSession(db) as session:
+        project_source = await session.get(ProjectSource, schema_elements[0].source_id)
+
+    response = await client.post(
+        f"{settings.API_STR}/graphql",
+        json={
+            "query": query,
+            "variables": {
+                "reportingSchemaId": reporting_schemas[0].id,
+                "exportFormat": "LCAX",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert isinstance(data["data"]["exportReportingSchema"], str)
+
+    lcax_data = base64.b64decode(data["data"]["exportReportingSchema"]).decode("utf-8")
+    assert lcax_data
+
+    lcax_project = LCAxProject(**json.loads(lcax_data))
+    assert lcax_project

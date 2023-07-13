@@ -6,9 +6,6 @@ from fastapi import HTTPException
 from lcacollect_config.context import get_session, get_user
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
-from specklepy.api import operations
-from specklepy.api.client import SpeckleClient
-from specklepy.transports.server import ServerTransport
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
