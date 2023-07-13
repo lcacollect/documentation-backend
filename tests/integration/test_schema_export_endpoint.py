@@ -9,17 +9,17 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
+from logic.export.lcabyg.models import Edge, Node
 from models.reporting_schema import ReportingSchema
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 from models.source import ProjectSource
-from schema.lcabyg.models import Edge, Node
 
 
 @pytest.fixture
 def mock_uuid(mocker):
     """Mock out the uuid for deterministic testing."""
-    mocker.patch("schema.lcabyg.models.string_uuid", return_value="test")
+    mocker.patch("logic.export.lcabyg.models.string_uuid", return_value="test")
 
 
 @pytest.fixture

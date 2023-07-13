@@ -1,8 +1,8 @@
 import pytest
 
+from logic.export.lcabyg.models import Edge, Node
+from logic.export.lcabyg.utilities import _bim7aa_to_gendk_dict
 from models.schema_category import SchemaCategory
-from schema.lcabyg.models import Edge, Node
-from schema.lcabyg.utilities import _bim7aa_to_gendk_dict
 
 
 @pytest.mark.asyncio
