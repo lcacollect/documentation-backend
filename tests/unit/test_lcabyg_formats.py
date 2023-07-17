@@ -131,6 +131,3 @@ async def test_aggregate_lcabyg_models(datafix_dir, category: SchemaCategory):
 
     lcabyg_data = aggregate_lcabyg_models([category], assemblies)
     assert lcabyg_data
-
-    data = json.dumps([entity.as_dict() for entity in lcabyg_data], indent=4)
-    Path("/home/chrk/mnt/windows10share/lcabyg/lcacollect/lcacollect_export.json").write_text(data)
