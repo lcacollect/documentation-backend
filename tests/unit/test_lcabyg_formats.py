@@ -1,14 +1,19 @@
+import json
+from pathlib import Path
+
 import pytest
 
-from logic.export.lcabyg.models import Edge, Node
+from logic.export.lcabyg.edges import Edge, create_edge
+from logic.export.lcabyg.nodes import ElementNode, ConstructionNode, create_node
 from logic.export.lcabyg.utilities import _bim7aa_to_gendk_dict
+from logic.export.to_lcabyg import aggregate_lcabyg_models
 from models.schema_category import SchemaCategory
 
 
 @pytest.mark.asyncio
 async def test_lcabyg_category_node(category: SchemaCategory):
     """Test LCAByg node representing a SchemaCategory."""
-    node = Node(category)
+    node = ElementNode(category)
     assert node.element_category_id == "10a52123-48d7-466a-9622-d463511a6df0"  # GenDK category ID
     node_dict = node.as_dict()
     assert node_dict == {
@@ -33,7 +38,7 @@ async def test_lcabyg_category_node(category: SchemaCategory):
 async def test_lcabyg_element_node(category: SchemaCategory):
     """Test LCAByg node representing a SchemaCategory."""
     element = category.elements[0]
-    node = Node(element)
+    node = create_node(element)
     node_dict = node.as_dict()
     assert node_dict == {
         "Node": {
@@ -57,9 +62,9 @@ async def test_lcabyg_element_node(category: SchemaCategory):
 @pytest.mark.asyncio
 async def test_lcabyg_element_to_construction_edge(category: SchemaCategory):
     """Test edge between element node and construction node."""
-    category_node = Node(category)
-    element_node = Node(category.elements[0])
-    edge = Edge(element_node, category_node)
+    category_node = ElementNode(category)
+    element_node = ConstructionNode(category.elements[0])
+    edge = create_edge(element_node, category_node)
     edge_dict = edge.as_dict()
 
     assert edge_dict == {
@@ -80,8 +85,8 @@ async def test_lcabyg_element_to_construction_edge(category: SchemaCategory):
 @pytest.mark.asyncio
 async def test_lcabyg_category_to_construction_edge(category: SchemaCategory):
     """Test edge between GenDK category and construction node."""
-    element_node = Node(category.elements[0])
-    edge = Edge(element_node)
+    element_node = ConstructionNode(category.elements[0])
+    edge = create_edge(element_node)
     edge_dict = edge.as_dict()
 
     assert edge_dict == {
@@ -101,8 +106,8 @@ async def test_lcabyg_category_to_construction_edge(category: SchemaCategory):
 @pytest.mark.asyncio
 async def test_lcabyg_category_to_element_edge(category: SchemaCategory):
     """Test edge between GenDK category and element node."""
-    category_node = Node(category)
-    edge = Edge(category_node)
+    category_node = create_node(category)
+    edge = create_edge(category_node)
     edge_dict = edge.as_dict()
 
     assert edge_dict == {
@@ -117,3 +122,15 @@ async def test_lcabyg_category_to_element_edge(category: SchemaCategory):
             category.id,
         ]
     }
+
+
+@pytest.mark.asyncio
+async def test_aggregate_lcabyg_models(datafix_dir, category: SchemaCategory):
+    project = json.loads((datafix_dir / "project_export.json").read_text())["data"]["projects"][0]
+    assemblies = json.loads((datafix_dir / "assembly_export.json").read_text())["data"]["assemblies"]
+
+    lcabyg_data = aggregate_lcabyg_models(project, category.reporting_schema, [category], assemblies)
+    assert lcabyg_data
+
+    data = json.dumps([entity.as_dict() for entity in lcabyg_data], indent=4)
+    Path("/home/chrk/mnt/windows10share/lcabyg/lcacollect/lcacollect_export.json").write_text(data)

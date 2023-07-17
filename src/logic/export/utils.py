@@ -29,6 +29,7 @@ async def query_project_for_export(project_id: str, token: str) -> dict | None:
                 "variables": {"id": project_id},
             },
         )
+
         data = response.json()
         if response.is_error or data.get("errors"):
             return None
@@ -90,6 +91,7 @@ async def query_assemblies_for_export(project_id: str, token: str) -> dict | Non
                 "variables": {"projectId": project_id},
             },
         )
+
         data = response.json()
         if response.is_error or data.get("errors"):
             return None

@@ -27,8 +27,8 @@ async def export_reporting_schema_mutation(info: Info, reporting_schema_id: str,
     token = get_token(info)
 
     if export_format is ExportFormat.LCABYG:
-        schema_categories = await query_for_lca_byg_export(reporting_schema_id, session)
-        entity_list = aggregate_lcabyg_models(schema_categories)
+        schema_categories, assemblies = await query_for_lca_byg_export(reporting_schema_id, session, token)
+        entity_list = aggregate_lcabyg_models(schema_categories, assemblies)
         data = json.dumps([entity.as_dict() for entity in entity_list], indent=4)
 
     elif export_format is ExportFormat.CSV:

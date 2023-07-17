@@ -86,7 +86,7 @@ async def app(db, mock_azure_scheme) -> FastAPI:
 
 
 @pytest.fixture()
-async def client(app: FastAPI) -> Iterator[AsyncClient]:
+async def client(app: FastAPI, httpx_mock) -> Iterator[AsyncClient]:
     """Async server (authenticated) client that handles lifespan and teardown"""
 
     async with AsyncClient(

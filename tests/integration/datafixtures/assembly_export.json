@@ -1,0 +1,80 @@
+{
+  "data": {
+    "assemblies": [
+      {
+        "id": "c95bed36-3cbd-4e8c-9eca-79449557ad76",
+        "name": "My Assembly",
+        "lifeTime": 50.0,
+        "unit": "m2",
+        "conversionFactor": 1.0,
+        "description": "",
+        "layers": [
+          {
+            "id": "25f27624-182e-4373-a51a-72cb2aba41c3",
+            "name": "L1",
+            "description": "",
+            "conversionFactor": 1.0,
+            "referenceServiceLife": 40,
+            "epd": {
+              "id": "751cf638-6c4c-4247-954e-7caf56cb5f79",
+              "name": "LPG tank 2700 l / t 1,2 (overjordiske)",
+              "declaredUnit": "pcs",
+              "version": "version 2 - 201222",
+              "validUntil": "2025-12-22",
+              "publishedDate": "2020-12-22",
+              "source": "BR18 - Tabel 7",
+              "location": "DK",
+              "subtype": "Generic",
+              "referenceServiceLife": null,
+              "comment": "#G0909",
+              "conversions": [
+                {
+                  "to": "kg",
+                  "value": 648.0
+                }
+              ],
+              "gwp": {
+                "a1a3": 1720.01,
+                "c3": 0.433551,
+                "c4": null,
+                "d": -825.924
+              }
+            }
+          },
+          {
+            "id": "591cfc76-0ae6-4965-87e5-9be53d4c9b71",
+            "name": "L2",
+            "description": "",
+            "conversionFactor": 1.0,
+            "referenceServiceLife": 50,
+            "epd": {
+              "id": "ccf04582-0ad2-4236-b3ba-cdb363559715",
+              "name": "Gulvvarmesystem inkl. isolering, PEX (100 mm afstand)",
+              "declaredUnit": "m2",
+              "version": "version 2 - 201222",
+              "validUntil": "2025-12-22",
+              "publishedDate": "2020-12-22",
+              "source": "BR18 - Tabel 7",
+              "location": "DK",
+              "subtype": "Generic",
+              "referenceServiceLife": null,
+              "comment": "#G0140",
+              "conversions": [
+                {
+                  "to": "kg",
+                  "value": 1.9
+                }
+              ],
+              "gwp": {
+                "a1a3": 7.74763,
+                "c3": 6.68108,
+                "c4": null,
+                "d": -2.78435
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

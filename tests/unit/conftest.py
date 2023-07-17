@@ -43,6 +43,7 @@ async def category(client: AsyncClient, db) -> List[SchemaElement]:
             name="Wall",
             quantity=2500,
             schema_category_id=category.id,
+            assembly_id="c95bed36-3cbd-4e8c-9eca-79449557ad76",
             unit="m3",  # LCAByg-incompatible value on purpose. Will be converted to upper case
         )
         category.elements.append(element)

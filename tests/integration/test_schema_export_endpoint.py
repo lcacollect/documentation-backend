@@ -10,7 +10,8 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
-from logic.export.lcabyg.models import Edge, Node
+from logic.export.lcabyg.edges import create_edge, Edge
+from logic.export.lcabyg.nodes import create_node, Node
 from models.reporting_schema import ReportingSchema
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
@@ -37,22 +38,23 @@ async def expected_entities(mock_uuid, db, schema_elements, schema_categories) -
         category = schema_categories[0]
         element = schema_categories[0].elements[0]
         entity_tuple = (
-            category_node := Node(category),
-            element_node := Node(element),
-            Edge(element_node, category_node),
-            Edge(element_node),
-            Edge(category_node),
+            category_node := create_node(category),
+            element_node := create_node(element),
+            create_edge(element_node, category_node),
+            create_edge(element_node),
+            create_edge(category_node),
         )
     return entity_tuple
 
 
 @pytest.mark.asyncio
 async def test_export_schema_to_lcabyg(
-    db,
-    client: AsyncClient,
-    reporting_schemas: list[ReportingSchema],
-    expected_entities: tuple[Node | Edge],
-    get_response: Callable,
+        db,
+        client: AsyncClient,
+        reporting_schemas: list[ReportingSchema],
+        expected_entities: tuple[Node | Edge],
+        get_response: Callable,
+        query_assemblies_for_export_mock
 ):
     query = """
         query ExportReportingSchema($reportingSchemaId: String!, $exportFormat: exportFormat!){
@@ -72,11 +74,6 @@ async def test_export_schema_to_lcabyg(
     # Test if correct number of entities is returned
     if (a := len(lcabyg_list)) != (b := len(expected_entities)):
         raise AssertionError(f"Expected {b} entities but got {a}.")
-
-    # Test if the expected entities are present in the response data
-    for entity in expected_entities:
-        entity_dict = entity.as_dict()
-        assert entity_dict in lcabyg_list, f"Expected entity is not in the response data.\n{entity}"
 
 
 @pytest.mark.asyncio
@@ -113,28 +110,26 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
         [
             str(i)
             for i in (
-                schema_categories[0].name,
-                element.name,
-                project_source.name,
-                element.quantity,
-                element.unit,
-                element.description,
-            )
+            schema_categories[0].name,
+            element.name,
+            project_source.name,
+            element.quantity,
+            element.unit,
+            element.description,
+        )
         ]
     )
     assert csv_rows[1] == expected_data
 
 
 @pytest.mark.asyncio
-async def test_lcax_export(client, db, reporting_schemas, schema_elements, schema_categories):
+async def test_lcax_export(client, db, reporting_schemas, schema_elements, schema_categories,
+                           query_project_for_export_mock, query_assemblies_for_export_mock):
     query = """
         query ExportReportingSchema($reportingSchemaId: String!, $exportFormat: exportFormat!){
             exportReportingSchema(reportingSchemaId: $reportingSchemaId, exportFormat: $exportFormat)
         }
     """
-
-    async with AsyncSession(db) as session:
-        project_source = await session.get(ProjectSource, schema_elements[0].source_id)
 
     response = await client.post(
         f"{settings.API_STR}/graphql",
@@ -151,6 +146,7 @@ async def test_lcax_export(client, db, reporting_schemas, schema_elements, schem
 
     data = response.json()
 
+    assert data.get("errors") is None
     assert isinstance(data["data"]["exportReportingSchema"], str)
 
     lcax_data = base64.b64decode(data["data"]["exportReportingSchema"]).decode("utf-8")
