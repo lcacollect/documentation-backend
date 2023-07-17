@@ -3,7 +3,7 @@ import logging
 from lcacollect_config.formatting import string_uuid
 
 from logic.export.lcabyg.models import Entity
-from logic.export.lcabyg.utilities import EntityTypes, Units, CATEGORY_RESOLVERS
+from logic.export.lcabyg.utilities import CATEGORY_RESOLVERS, EntityTypes, Units
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 
@@ -79,7 +79,6 @@ class ClassNode(Node):
 
 
 class DictNode(Node):
-
     def __init__(self, entity: dict):
         self.id = entity.get("id")
         self.name = entity.get("name")
@@ -88,7 +87,6 @@ class DictNode(Node):
 
 
 class ElementNode(ClassNode):
-
     def __init__(self, entity: SchemaCategory):
         self.type = EntityTypes.ELEMENT
         super().__init__(entity)
@@ -159,7 +157,7 @@ class ProductNode(DictNode):
                     "source": self.source,
                     "comment": self.comment,
                     "uncertainty_factor": 1.0,
-                    "uncertainty_factor_dgnb": 1.3
+                    "uncertainty_factor_dgnb": 1.3,
                 }
             }
         }
@@ -248,7 +246,7 @@ class StageNode(DictNode):
                         "PER": self.per,
                         "SENR": self.senr,
                         "SER": self.ser,
-                    }
+                    },
                 }
             }
         }

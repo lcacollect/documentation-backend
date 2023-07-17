@@ -10,8 +10,8 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from core.config import settings
-from logic.export.lcabyg.edges import create_edge, Edge
-from logic.export.lcabyg.nodes import create_node, Node
+from logic.export.lcabyg.edges import Edge, create_edge
+from logic.export.lcabyg.nodes import Node, create_node
 from models.reporting_schema import ReportingSchema
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
@@ -49,12 +49,12 @@ async def expected_entities(mock_uuid, db, schema_elements, schema_categories) -
 
 @pytest.mark.asyncio
 async def test_export_schema_to_lcabyg(
-        db,
-        client: AsyncClient,
-        reporting_schemas: list[ReportingSchema],
-        expected_entities: tuple[Node | Edge],
-        get_response: Callable,
-        query_assemblies_for_export_mock
+    db,
+    client: AsyncClient,
+    reporting_schemas: list[ReportingSchema],
+    expected_entities: tuple[Node | Edge],
+    get_response: Callable,
+    query_assemblies_for_export_mock,
 ):
     query = """
         query ExportReportingSchema($reportingSchemaId: String!, $exportFormat: exportFormat!){
@@ -110,21 +110,28 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
         [
             str(i)
             for i in (
-            schema_categories[0].name,
-            element.name,
-            project_source.name,
-            element.quantity,
-            element.unit,
-            element.description,
-        )
+                schema_categories[0].name,
+                element.name,
+                project_source.name,
+                element.quantity,
+                element.unit,
+                element.description,
+            )
         ]
     )
     assert csv_rows[1] == expected_data
 
 
 @pytest.mark.asyncio
-async def test_lcax_export(client, db, reporting_schemas, schema_elements, schema_categories,
-                           query_project_for_export_mock, query_assemblies_for_export_mock):
+async def test_lcax_export(
+    client,
+    db,
+    reporting_schemas,
+    schema_elements,
+    schema_categories,
+    query_project_for_export_mock,
+    query_assemblies_for_export_mock,
+):
     query = """
         query ExportReportingSchema($reportingSchemaId: String!, $exportFormat: exportFormat!){
             exportReportingSchema(reportingSchemaId: $reportingSchemaId, exportFormat: $exportFormat)

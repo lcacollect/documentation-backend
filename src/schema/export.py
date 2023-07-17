@@ -36,8 +36,9 @@ async def export_reporting_schema_mutation(info: Info, reporting_schema_id: str,
         data = generate_csv_schema(schema_categories)
 
     elif export_format is ExportFormat.LCAX:
-        project, reporting_schema, schema_categories, assemblies = await query_for_lcax_export(reporting_schema_id,
-                                                                                               session, token)
+        project, reporting_schema, schema_categories, assemblies = await query_for_lcax_export(
+            reporting_schema_id, session, token
+        )
         data = generate_lcax_schema(project, reporting_schema, schema_categories, assemblies)
 
     else:

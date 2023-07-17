@@ -1,19 +1,32 @@
+import importlib.metadata
 from datetime import datetime
 
-from lcax.pydantic import LCAxProject, ImpactCategoryKey, LifeCycleStage, Assembly, Classification, Unit, EPDPart, EPD, \
-    Standard, Conversion, EPDSource, EPDSourceItem
+from lcax.pydantic import (
+    EPD,
+    Assembly,
+    Classification,
+    Conversion,
+    EPDPart,
+    EPDSource,
+    EPDSourceItem,
+    ImpactCategoryKey,
+    LCAxProject,
+    LifeCycleStage,
+    Standard,
+    Unit,
+)
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
-import importlib.metadata
+
 import models.reporting_schema as models_schema
+import models.reporting_schema as models_reporting
 import models.schema_category as models_category
 import models.schema_element as models_element
-import models.reporting_schema as models_reporting
-from logic.export.utils import query_project_for_export, query_assemblies_for_export
+from logic.export.utils import query_assemblies_for_export, query_project_for_export
 
 
 async def query_for_lcax_export(
-        reporting_schema_id: str, session, token: str
+    reporting_schema_id: str, session, token: str
 ) -> tuple[dict | None, models_reporting.ReportingSchema, list[models_category.SchemaCategory], list[dict] | None]:
     """Query the database for SchemaCategories and the required attributes for CSV export."""
 
@@ -36,10 +49,10 @@ async def query_for_lcax_export(
 
 
 def generate_lcax_schema(
-        project: dict,
-        reporting_schema: models_reporting.ReportingSchema,
-        schema_categories: list[models_schema.SchemaCategory],
-        assemblies: list[dict],
+    project: dict,
+    reporting_schema: models_reporting.ReportingSchema,
+    schema_categories: list[models_schema.SchemaCategory],
+    assemblies: list[dict],
 ) -> str:
     """Generate a LCAx string of the database contents."""
 
@@ -75,20 +88,22 @@ def get_life_cycle_stages(project: dict) -> list[LifeCycleStage]:
 
 
 def get_assemblies(
-        schema_categories: list[models_schema.SchemaCategory],
-        classification_system: str | None,
-        graphql_assemblies: list[dict],
+    schema_categories: list[models_schema.SchemaCategory],
+    classification_system: str | None,
+    graphql_assemblies: list[dict],
 ) -> dict[str, Assembly]:
     assemblies = {}
 
     for category in schema_categories:
         for element in category.elements:
             assembly = Assembly(
-                classification=[Classification(
-                    system=classification_system,
-                    code=element.schema_category.name.split(" | ")[0],
-                    name=element.schema_category.name.split(" | ")[1],
-                )]
+                classification=[
+                    Classification(
+                        system=classification_system,
+                        code=element.schema_category.name.split(" | ")[0],
+                        name=element.schema_category.name.split(" | ")[1],
+                    )
+                ]
                 if classification_system
                 else None,
                 description=element.description,
@@ -123,9 +138,10 @@ def get_parts(element: models_element.SchemaElement, graphql_assemblies: list[di
                     standard=Standard.EN15804A1,
                     reference_service_life=layer.get("epd", {}).get("referenceServiceLife"),
                     comment=layer.get("epd", {}).get("comment"),
-                    conversions=[Conversion(to=convert_to_lcax_unit(conversion.get("to")),
-                                            value=conversion.get("value")) for conversion in
-                                 layer.get("epd", {}).get("conversions")],
+                    conversions=[
+                        Conversion(to=convert_to_lcax_unit(conversion.get("to")), value=conversion.get("value"))
+                        for conversion in layer.get("epd", {}).get("conversions")
+                    ],
                     gwp=layer.get("epd", {}).get("gwp"),
                 )
                 epd_part = EPDPart(

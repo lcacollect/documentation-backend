@@ -7,7 +7,13 @@ from lcacollect_config.formatting import string_uuid
 from logic.export.lcabyg.models import Entity
 
 if TYPE_CHECKING:
-    from logic.export.lcabyg.nodes import Node, ConstructionNode, ElementNode, ProductNode, StageNode
+    from logic.export.lcabyg.nodes import (
+        ConstructionNode,
+        ElementNode,
+        Node,
+        ProductNode,
+        StageNode,
+    )
 
 
 def create_edge(child: "Node", parent: Optional["Node"] = None) -> "Edge":
@@ -48,7 +54,6 @@ class Edge(Entity):
 
 
 class ElementToConstructionEdge(Edge):
-
     def __init__(self, child: "ConstructionNode", parent_id: str):
         self.name = "ElementToConstruction"
         self.amount = child.amount
@@ -63,7 +68,6 @@ class ElementToConstructionEdge(Edge):
 
 
 class CategoryToConstructionEdge(Edge):
-
     def __init__(self, child: "ConstructionNode", parent_id: str):
         self.name = "CategoryToConstruction"
         super().__init__(child, parent_id)
@@ -76,7 +80,6 @@ class CategoryToConstructionEdge(Edge):
 
 
 class CategoryToElementEdge(Edge):
-
     def __init__(self, child: "ElementNode", parent_id: str):
         self.name = "CategoryToElement"
         super().__init__(child, parent_id)
@@ -89,7 +92,6 @@ class CategoryToElementEdge(Edge):
 
 
 class ConstructionToProductEdge(Edge):
-
     def __init__(self, child: "ProductNode", parent_id: str):
         self.name = "ConstructionToProduct"
         self.amount = child.amount
@@ -106,12 +108,11 @@ class ConstructionToProductEdge(Edge):
             "demolition": False,
             "delayed_start": 0,
             "enabled": True,
-            "expected_scenarios": []
+            "expected_scenarios": [],
         }
 
 
 class ProductToStageEdge(Edge):
-
     def __init__(self, child: "StageNode", parent_id: str):
         self.name = "ProductToStage"
         super().__init__(child, parent_id)
@@ -125,7 +126,6 @@ class ProductToStageEdge(Edge):
 
 
 class CategoryToStageEdge(Edge):
-
     def __init__(self, child: "StageNode", parent_id: str):
         self.name = "CategoryToStage"
         super().__init__(child, parent_id)

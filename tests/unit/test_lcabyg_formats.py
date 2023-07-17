@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from logic.export.lcabyg.edges import Edge, create_edge
-from logic.export.lcabyg.nodes import ElementNode, ConstructionNode, create_node
+from logic.export.lcabyg.nodes import ConstructionNode, ElementNode, create_node
 from logic.export.lcabyg.utilities import _bim7aa_to_gendk_dict
 from logic.export.to_lcabyg import aggregate_lcabyg_models
 from models.schema_category import SchemaCategory
