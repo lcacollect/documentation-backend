@@ -129,7 +129,7 @@ async def test_aggregate_lcabyg_models(datafix_dir, category: SchemaCategory):
     project = json.loads((datafix_dir / "project_export.json").read_text())["data"]["projects"][0]
     assemblies = json.loads((datafix_dir / "assembly_export.json").read_text())["data"]["assemblies"]
 
-    lcabyg_data = aggregate_lcabyg_models(project, category.reporting_schema, [category], assemblies)
+    lcabyg_data = aggregate_lcabyg_models([category], assemblies)
     assert lcabyg_data
 
     data = json.dumps([entity.as_dict() for entity in lcabyg_data], indent=4)
