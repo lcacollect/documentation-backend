@@ -11,7 +11,6 @@ from azure.storage.blob.aio import BlobClient
 from lcacollect_config.context import get_session, get_user
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
-from specklepy.api.client import SpeckleClient
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -288,9 +287,9 @@ async def remove_members_from_stream(stream_id: str, speckle_url: str):
         client.stream.revoke_permission(stream_id=stream_id, user_id=collaborator.id)
 
 
-def get_speckle_client(speckle_url: str) -> SpeckleClient:
-    """Fetches the Speckle Client object"""
-
-    client = SpeckleClient(speckle_url)
-    client.authenticate_with_token(settings.SPECKLE_TOKEN)
-    return client
+# def get_speckle_client(speckle_url: str) -> SpeckleClient:
+#     """Fetches the Speckle Client object"""
+#
+#     client = SpeckleClient(speckle_url)
+#     client.authenticate_with_token(settings.SPECKLE_TOKEN)
+#     return client

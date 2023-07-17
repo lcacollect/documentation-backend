@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import json
 
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -268,6 +269,39 @@ def group_exists_mock(mocker):
 @pytest.fixture
 def group_doesnt_exist_mock(mocker):
     mocker.patch("lcacollect_config.validate.group_exists", return_value=False)
+
+
+@pytest.fixture
+def query_project_for_export_mock(httpx_mock, datafix_dir, reporting_schemas):
+    project_mock = json.loads((datafix_dir / "project_export.json").read_text())
+    project_id = reporting_schemas[0].project_id
+    query = (
+        b'{"query": "\\n        query($id: String!) {\\n            projects(filters: {id: {equal: $id}}) {\\n                id\\n                name\\n                country\\n                stages {\\n                    phase\\n                }\\n            }\\n        }\\n    ", "variables": {"id": "'
+        + project_id.encode()
+        + b'"}}'
+    )
+    httpx_mock.add_response(url=f"{settings.ROUTER_URL}/graphql", json=project_mock, match_content=query)
+    yield
+    httpx_mock.reset(assert_all_responses_were_requested=True)
+
+
+@pytest.fixture
+def query_assemblies_for_export_mock(httpx_mock, datafix_dir, reporting_schemas):
+    assembly_mock = json.loads((datafix_dir / "assembly_export.json").read_text())
+    project_id = reporting_schemas[0].project_id
+    query = (
+        b'{"query": "\\n        query($projectId: String!) {\\n            assemblies(projectId: $projectId) {\\n                id\\n                name\\n                lifeTime\\n                unit\\n                conversionFactor\\n                description\\n                layers {\\n                    id\\n                    name\\n                    description\\n                    conversionFactor\\n                    referenceServiceLife\\n                    epd {\\n                        id\\n                        name\\n                        declaredUnit\\n                        version\\n                        validUntil\\n                        publishedDate\\n                        source\\n                        location\\n                        subtype\\n                        referenceServiceLife\\n                        comment\\n                        conversions {\\n                            to\\n                            value\\n                        }\\n                        gwp {\\n                            a1a3\\n                            c3\\n                            c4\\n                            d\\n                        }\\n                    }\\n                }\\n            }\\n        }\\n    ", "variables": {"projectId": "'
+        + project_id.encode()
+        + b'"}}'
+    )
+    httpx_mock.add_response(
+        url=f"{settings.ROUTER_URL}/graphql",
+        json=assembly_mock,
+        match_content=query,
+    )
+
+    yield
+    httpx_mock.reset(assert_all_responses_were_requested=False)
 
 
 @pytest.fixture

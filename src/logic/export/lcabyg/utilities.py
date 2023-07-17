@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 class EntityTypes(Enum):
     CONSTRUCTION = "Construction"
     ELEMENT = "Element"
-    PHASE = NotImplementedError
-    PRODUCT = NotImplementedError
+    STAGE = "Stage"
+    PRODUCT = "Product"
 
 
 class Units(Enum):
