@@ -50,15 +50,17 @@ class ProjectSource(SQLModel, table=True):
                     # reader: [{"col1_name": "row_val", "col2_name":..}, {...}]
                     if self.type == ProjectSourceType.CSV.value:
                         data = raw_data.decode()
-                        header = data[:data.index('\n')]
-                        if header.count(';') >= 2:
-                            sep = ';'
-                            dec = ','
+                        header = data[: data.index("\n")]
+                        if header.count(";") >= 2:
+                            sep = ";"
+                            dec = ","
                         else:
-                            sep = ','
-                            dec = '.'
+                            sep = ","
+                            dec = "."
                         file_data = StringIO(data)
-                        reader = pandas.read_csv(file_data, sep=sep, decimal=dec).replace({np.nan: None}).to_dict("records")
+                        reader = (
+                            pandas.read_csv(file_data, sep=sep, decimal=dec).replace({np.nan: None}).to_dict("records")
+                        )
 
                     elif self.type == ProjectSourceType.XLSX.value:
                         reader = pandas.read_excel(raw_data).replace({np.nan: None}).to_dict("records")
