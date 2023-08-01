@@ -1,5 +1,8 @@
 import base64
 import json
+import io
+import codecs
+import csv
 from enum import Enum
 
 import strawberry
@@ -41,7 +44,7 @@ async def export_reporting_schema_mutation(info: Info, reporting_schema_id: str,
     else:
         raise NotImplementedError
 
-    return str(base64.b64encode(data.encode("utf-8")), "utf-8")
+    return str(base64.b64encode(data.encode("utf-8-sig")), "utf-8")
 
 
 async def _query_for_lca_byg_export(reporting_schema_id: str, session) -> list[models_category.SchemaCategory]:
@@ -105,21 +108,13 @@ async def _query_for_csv_export(reporting_schema_id: str, session) -> list[model
 def _generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -> str:
     """Generate a CSV string of the database contents."""
 
-    separator = ";"
-    # Specify the fields
-    format_ = separator.join(
-        [
-            "{class}",
-            "{name}",
-            "{source}",
-            "{quantity}",
-            "{unit}",
-            "{description}",
-        ]
-    )
+    csv_io = io.StringIO("", newline="")
+    fields = ["class", "name", "source", "quantity", "unit", "description"]
+
+    wrapper = csv.DictWriter(csv_io, fieldnames=fields, delimiter=";", quoting=csv.QUOTE_NONNUMERIC)
+
     # Generate the header row
-    header = format_.replace("{", "").replace("}", "")
-    row_list = [header]
+    wrapper.writeheader()
     # Extract field values from SchemaElements
     for category in schema_categories:
         # ?: Create extra line for category here?
@@ -132,6 +127,5 @@ def _generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) 
                 "unit": element.unit,
                 "description": element.description,
             }
-            row_list.append(format_.format(**values))
-    csv_str = "\n".join(row_list)
-    return csv_str
+            wrapper.writerow(values)
+    return csv_io.getvalue()
