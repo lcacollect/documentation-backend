@@ -49,7 +49,10 @@ class ProjectSource(SQLModel, table=True):
 
                     # reader: [{"col1_name": "row_val", "col2_name":..}, {...}]
                     if self.type == ProjectSourceType.CSV.value:
-                        data = raw_data.decode()
+                        try:
+                            data = raw_data.decode("utf-8")
+                        except UnicodeDecodeError:
+                            data = raw_data.decode("cp1252")
                         header = data[: data.index("\n")]
                         if header.count(";") >= 2:
                             sep = ";"
