@@ -22,7 +22,7 @@ openpyxl = "*"
 lcax = "*"
 
 [dev-packages]
-pydevd-pycharm = "==222.4459.20"
+pydevd-pycharm = "~=232.8660.197"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-env = "*"

@@ -214,8 +214,8 @@ type Mutation {
   """Add a Schema Element to a Schema Category"""
   addSchemaElementFromSource(schemaCategoryIds: [String!]!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
 
-  """Update a Schema Element"""
-  updateSchemaElement(id: String!, name: String = null, schemaCategoryId: String = null, quantity: Float = null, unit: Unit = null, description: String = null, result: JSON = null, assemblyId: String = null): GraphQLSchemaElement!
+  """Update Schema Elements"""
+  updateSchemaElements(schemaElements: [SchemaElementUpdateInput!]!): [GraphQLSchemaElement!]!
 
   """Delete a Schema Element"""
   deleteSchemaElement(id: String!): String!
@@ -326,6 +326,17 @@ input SchemaElementFilters {
   quantity: FilterOptions = null
   unit: FilterOptions = null
   description: FilterOptions = null
+}
+
+input SchemaElementUpdateInput {
+  id: String!
+  name: String = null
+  schemaCategory: String = null
+  quantity: Float = null
+  unit: Unit = null
+  description: String = null
+  result: JSON = null
+  assemblyId: String = null
 }
 
 input SchemaTemplateFilters {
