@@ -44,7 +44,7 @@ async def test_get_schema_elements(client: AsyncClient, schema_elements, member_
 
 @pytest.mark.asyncio
 async def test_get_schema_elements_with_filters(
-        client: AsyncClient, schema_elements, member_mocker, get_response: Callable
+    client: AsyncClient, schema_elements, member_mocker, get_response: Callable
 ):
     query = """
         query getElements($schemaCategoryIds: [String!]!, $commitId: String = null){
@@ -65,14 +65,14 @@ async def test_get_schema_elements_with_filters(
 
 @pytest.mark.asyncio
 async def test_create_schema_element_from_source(
-        client: AsyncClient,
-        db,
-        commits,
-        schema_categories,
-        project_sources,
-        member_mocker,
-        blob_client_mock,
-        get_response: Callable,
+    client: AsyncClient,
+    db,
+    commits,
+    schema_categories,
+    project_sources,
+    member_mocker,
+    blob_client_mock,
+    get_response: Callable,
 ):
     mutation = """
         mutation addElement($schemaCategoryIds: [String!]!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
@@ -117,14 +117,14 @@ async def test_create_schema_element_from_source(
 
 @pytest.mark.asyncio
 async def test_create_schema_element_from_source_xlsx(
-        client: AsyncClient,
-        db,
-        commits,
-        schema_categories,
-        project_sources,
-        member_mocker,
-        blob_client_mock_xlsx,
-        get_response: Callable,
+    client: AsyncClient,
+    db,
+    commits,
+    schema_categories,
+    project_sources,
+    member_mocker,
+    blob_client_mock_xlsx,
+    get_response: Callable,
 ):
     mutation = """
         mutation addElement($schemaCategoryIds: [String!]!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
@@ -169,14 +169,14 @@ async def test_create_schema_element_from_source_xlsx(
 
 @pytest.mark.asyncio
 async def test_create_schema_element(
-        client: AsyncClient,
-        db,
-        schema_categories,
-        schema_elements,
-        repositories,
-        commits,
-        member_mocker,
-        get_response: Callable,
+    client: AsyncClient,
+    db,
+    schema_categories,
+    schema_elements,
+    repositories,
+    commits,
+    member_mocker,
+    get_response: Callable,
 ):
     mutation = """
         mutation addElement($schemaCategoryId: String!) {
@@ -218,14 +218,14 @@ async def test_create_schema_element(
 
 @pytest.mark.asyncio
 async def test_update_schema_element(
-        client: AsyncClient,
-        db,
-        schema_elements,
-        commits,
-        repositories,
-        schema_categories,
-        member_mocker,
-        get_response: Callable,
+    client: AsyncClient,
+    db,
+    schema_elements,
+    commits,
+    repositories,
+    schema_categories,
+    member_mocker,
+    get_response: Callable,
 ):
     mutation = """
         mutation updateElements($elements: [SchemaElementUpdateInput!]!){
@@ -239,13 +239,15 @@ async def test_update_schema_element(
             }
         }
     """
-    variables = {"elements": {
-        "id": schema_elements[1].id,
-        "description": "Description 1",
-        "quantity": 1.0,
-        "unit": Unit.M3.name,
-        "assemblyId": "assembly-Id",
-    }}
+    variables = {
+        "elements": {
+            "id": schema_elements[1].id,
+            "description": "Description 1",
+            "quantity": 1.0,
+            "unit": Unit.M3.name,
+            "assemblyId": "assembly-Id",
+        }
+    }
 
     async with AsyncSession(db) as session:
         query = select(Commit)
@@ -253,14 +255,16 @@ async def test_update_schema_element(
         commits_before = commits_before.all()
 
     data = await get_response(client, mutation, variables=variables)
-    assert data["updateSchemaElements"] == [{
-        "name": "Schema Element 1",
-        "id": schema_elements[1].id,
-        "description": "Description 1",
-        "quantity": 1.0,
-        "unit": Unit.M3.name,
-        "assemblyId": "assembly-Id",
-    }]
+    assert data["updateSchemaElements"] == [
+        {
+            "name": "Schema Element 1",
+            "id": schema_elements[1].id,
+            "description": "Description 1",
+            "quantity": 1.0,
+            "unit": Unit.M3.name,
+            "assemblyId": "assembly-Id",
+        }
+    ]
 
     async with AsyncSession(db) as session:
         query = select(Commit)
@@ -271,14 +275,14 @@ async def test_update_schema_element(
 
 
 async def test_delete_schema_element(
-        db,
-        client: AsyncClient,
-        schema_elements,
-        repositories,
-        schema_categories,
-        commits,
-        member_mocker,
-        get_response: Callable,
+    db,
+    client: AsyncClient,
+    schema_elements,
+    repositories,
+    schema_categories,
+    commits,
+    member_mocker,
+    get_response: Callable,
 ):
     mutation = """
         mutation($id: String!) {
