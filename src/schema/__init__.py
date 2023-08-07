@@ -147,10 +147,10 @@ class Mutation:
         resolver=schema_element.add_schema_element_from_source_mutation,
         description=getdoc(schema_element.add_schema_element_mutation),
     )
-    update_schema_element: schema_element.GraphQLSchemaElement = strawberry.mutation(
+    update_schema_elements: list[schema_element.GraphQLSchemaElement] = strawberry.mutation(
         permission_classes=[IsAuthenticated],
-        resolver=schema_element.update_schema_element_mutation,
-        description=getdoc(schema_element.update_schema_element_mutation),
+        resolver=schema_element.update_schema_elements_mutation,
+        description=getdoc(schema_element.update_schema_elements_mutation),
     )
     delete_schema_element: str = strawberry.mutation(
         permission_classes=[IsAuthenticated],
