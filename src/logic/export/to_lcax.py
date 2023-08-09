@@ -79,9 +79,8 @@ def generate_lcax_schema(
 def get_life_cycle_stages(project: dict) -> list[LifeCycleStage]:
     stages = []
     for stage in project.get("stages"):
-        if stage.get("phase") in ["A1", "A2", "A3"]:
-            if "A1A3" not in stages:
-                stages.append("A1A3")
+        if stage.get("phase") == "A1-A3":
+            stages.append("A1A3")
         else:
             stages.append(stage.get("phase"))
     return stages

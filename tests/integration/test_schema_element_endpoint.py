@@ -228,8 +228,8 @@ async def test_update_schema_element(
     get_response: Callable,
 ):
     mutation = """
-        mutation updateElement($id: String! $quantity: Float!, $unit: Unit!, $description: String!, $assemblyId: String!) {
-            updateSchemaElement(id: $id, quantity: $quantity, unit: $unit, description: $description, assemblyId: $assemblyId) {
+        mutation updateElements($elements: [SchemaElementUpdateInput!]!){
+            updateSchemaElements(schemaElements: $elements) {
                 id
                 quantity
                 unit
@@ -240,11 +240,13 @@ async def test_update_schema_element(
         }
     """
     variables = {
-        "id": schema_elements[1].id,
-        "description": "Description 1",
-        "quantity": 1.0,
-        "unit": Unit.M3.name,
-        "assemblyId": "assembly-Id",
+        "elements": {
+            "id": schema_elements[1].id,
+            "description": "Description 1",
+            "quantity": 1.0,
+            "unit": Unit.M3.name,
+            "assemblyId": "assembly-Id",
+        }
     }
 
     async with AsyncSession(db) as session:
@@ -253,14 +255,16 @@ async def test_update_schema_element(
         commits_before = commits_before.all()
 
     data = await get_response(client, mutation, variables=variables)
-    assert data["updateSchemaElement"] == {
-        "name": "Schema Element 1",
-        "id": schema_elements[1].id,
-        "description": "Description 1",
-        "quantity": 1.0,
-        "unit": Unit.M3.name,
-        "assemblyId": "assembly-Id",
-    }
+    assert data["updateSchemaElements"] == [
+        {
+            "name": "Schema Element 1",
+            "id": schema_elements[1].id,
+            "description": "Description 1",
+            "quantity": 1.0,
+            "unit": Unit.M3.name,
+            "assemblyId": "assembly-Id",
+        }
+    ]
 
     async with AsyncSession(db) as session:
         query = select(Commit)

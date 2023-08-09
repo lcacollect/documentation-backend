@@ -142,39 +142,68 @@ async def add_schema_element_mutation(
     return schema_element
 
 
-async def update_schema_element_mutation(
+@strawberry.input()
+class SchemaElementUpdateInput:
+    id: str
+    name: Optional[str] = None
+    schema_category: Optional[str] = None
+    quantity: Optional[float] = None
+    unit: Unit | None = None
+    description: Optional[str] = None
+    result: Optional[JSON] = None
+    assembly_id: Optional[str] = None
+
+
+async def update_schema_elements_mutation(
     info: Info,
-    id: str,
-    name: Optional[str] = None,
-    schema_category_id: Optional[str] = None,
-    quantity: Optional[float] = None,
-    unit: Unit | None = None,
-    description: Optional[str] = None,
-    result: Optional[JSON] = None,
-    assembly_id: Optional[str] = None,
-) -> GraphQLSchemaElement:
-    """Update a Schema Element"""
+    schema_elements: list[SchemaElementUpdateInput],
+) -> list[GraphQLSchemaElement]:
+    """Update Schema Elements"""
 
     session = info.context.get("session")
 
-    schema_element = await session.get(models_element.SchemaElement, id)
-
-    if not schema_element:
-        raise DatabaseItemNotFound(f"Could not find Schema Element with id: {id}")
-
+    schema_element = await session.get(models_element.SchemaElement, schema_elements[0].id)
     commit, schema_category, _ = await fetch_models(info, schema_element.schema_category_id)
     await authenticate(info, schema_category.reporting_schema.project_id)
+
+    schema_element_models = [
+        await update_schema_element_model(session, commit, schema_element_input)
+        for schema_element_input in schema_elements
+    ]
+
+    session.add(commit)
+
+    await session.commit()
+    await session.refresh(commit)
+    [await session.refresh(schema_element) for schema_element in schema_element_models]
+
+    query = select(models_element.SchemaElement).where(
+        col(models_element.SchemaElement.id).in_([schema_element.id for schema_element in schema_element_models])
+    )
+    query = await graphql_options(info, query)
+
+    _schema_elements = (await session.exec(query)).all()
+    return _schema_elements
+
+
+async def update_schema_element_model(
+    session: AsyncSession, commit: models_commit.Commit, schema_element_input: SchemaElementUpdateInput
+) -> models_element.SchemaElement:
+    schema_element = await session.get(models_element.SchemaElement, schema_element_input.id)
+
+    if not schema_element:
+        raise DatabaseItemNotFound(f"Could not find Schema Element with id: {schema_element_input.id}")
 
     commit.schema_elements.remove(schema_element)
 
     kwargs = {
-        "name": name,
-        "schema_category_id": schema_category_id,
-        "quantity": quantity,
-        "unit": unit.value if unit is not None else None,
-        "description": description,
-        "result": result,
-        "assembly_id": assembly_id,
+        "name": schema_element_input.name,
+        "schema_category_id": schema_element_input.schema_category,
+        "quantity": schema_element_input.quantity,
+        "unit": schema_element_input.unit.value if schema_element_input.unit is not None else None,
+        "description": schema_element_input.description,
+        "result": schema_element_input.result,
+        "assembly_id": schema_element_input.assembly_id,
     }
 
     for key, value in kwargs.items():
@@ -182,18 +211,8 @@ async def update_schema_element_mutation(
             setattr(schema_element, key, value)
 
     commit.schema_elements.append(schema_element)
-
-    session.add(commit)
     session.add(schema_element)
 
-    await session.commit()
-    await session.refresh(commit)
-    await session.refresh(schema_element)
-
-    query = select(models_element.SchemaElement).where(models_element.SchemaElement.id == id)
-    query = await graphql_options(info, query)
-
-    await session.exec(query)
     return schema_element
 
 

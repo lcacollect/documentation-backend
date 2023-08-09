@@ -7,12 +7,16 @@ from sqlalchemy.sql.expression import func
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from models.comment import Comment
 from models.commit import Commit
 from models.reporting_schema import ReportingSchema
 from models.repository import Repository
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 from models.schema_template import SchemaTemplate
+from models.source import ProjectSource
+from models.tag import Tag
+from models.task import Task
 
 
 def load_bim7aa(path: Path):
