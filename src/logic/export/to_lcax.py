@@ -11,8 +11,9 @@ from lcax import (
     ImpactCategoryKey,
     LCAxProject,
     LifeCycleStage,
+    Source,
     Standard,
-    Unit, Source,
+    Unit,
 )
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
