@@ -1,17 +1,17 @@
 import importlib.metadata
 from datetime import datetime
 
-from lcax.pydantic import (
+from lcax import (
     EPD,
     Assembly,
     Classification,
     Conversion,
     EPDPart,
-    EPDSource,
     EPDSourceItem,
     ImpactCategoryKey,
     LCAxProject,
     LifeCycleStage,
+    Source,
     Standard,
     Unit,
 )
@@ -66,23 +66,23 @@ def generate_lcax_schema(
         classification_system=classification_system,
         emission_parts=get_assemblies(schema_categories, classification_system, assemblies),
         format_version=importlib.metadata.version("lcax"),
-        impact_categories=[ImpactCategoryKey.GWP],
+        impact_categories=[ImpactCategoryKey.gwp],
         lcia_method="EN15978",
         life_cycle_stages=get_life_cycle_stages(project),
         life_span=50,
         location=project["country"] or "DK",
     )
 
-    return lcax_project.json()
+    return lcax_project.json(by_alias=True)
 
 
 def get_life_cycle_stages(project: dict) -> list[LifeCycleStage]:
     stages = []
     for stage in project.get("stages"):
         if stage.get("phase") == "A1-A3":
-            stages.append("A1A3")
+            stages.append("a1a3")
         else:
-            stages.append(stage.get("phase"))
+            stages.append(stage.get("phase", "").lower())
     return stages
 
 
@@ -132,9 +132,9 @@ def get_parts(element: models_element.SchemaElement, graphql_assemblies: list[di
                     declared_unit=convert_to_lcax_unit(layer.get("epd", {}).get("declaredUnit")),
                     format_version=importlib.metadata.version("lcax"),
                     version=layer.get("epd", {}).get("version"),
-                    source=layer.get("epd", {}).get("source"),
+                    source=Source(name=layer.get("epd", {}).get("source")),
                     subtype=layer.get("epd", {}).get("subtype"),
-                    standard=Standard.EN15804A1,
+                    standard=Standard.en15804_a1,
                     reference_service_life=layer.get("epd", {}).get("referenceServiceLife"),
                     comment=layer.get("epd", {}).get("comment"),
                     conversions=[
@@ -149,7 +149,7 @@ def get_parts(element: models_element.SchemaElement, graphql_assemblies: list[di
                     part_quantity=layer.get("conversionFactor"),
                     part_unit=convert_to_lcax_unit(layer.get("unit")),
                     reference_service_life=layer.get("referenceServiceLife"),
-                    epd_source=EPDSource(__root__=EPDSourceItem(EPD=epd_source)),
+                    epd_source=EPDSourceItem(epd=epd_source),
                 )
                 epd_parts[epd_part.id] = epd_part
 
@@ -159,19 +159,19 @@ def get_parts(element: models_element.SchemaElement, graphql_assemblies: list[di
 def convert_to_lcax_unit(unit: str) -> Unit:
     match unit:
         case "pcs":
-            return Unit.PCS
+            return Unit.pcs
         case "m":
-            return Unit.M
+            return Unit.m
         case "m2":
-            return Unit.M2
+            return Unit.m2
         case "m3":
-            return Unit.M3
+            return Unit.m3
         case "kg":
-            return Unit.KG
+            return Unit.kg
         case "l":
-            return Unit.L
+            return Unit.l
         case _:
-            return Unit.UNKNOWN
+            return Unit.unknown
 
 
 def get_classification_system(reporting_schema: models_reporting.ReportingSchema) -> str | None:
