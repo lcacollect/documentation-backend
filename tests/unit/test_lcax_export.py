@@ -8,4 +8,4 @@ def test_get_life_cycle_stages(datafix_dir):
 
     stages = get_life_cycle_stages(project)
 
-    assert stages == ["A1A3", "C3", "C4", "D"]
+    assert stages == ["a1a3", "c3", "c4", "d"]

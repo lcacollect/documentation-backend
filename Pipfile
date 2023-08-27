@@ -19,7 +19,7 @@ azure-storage-blob = "*"
 aiocache = "*"
 pandas = "*"
 openpyxl = "*"
-lcax = "*"
+lcax = ">=1.3.1"
 
 [dev-packages]
 pydevd-pycharm = "~=232.8660.197"
