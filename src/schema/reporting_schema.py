@@ -52,7 +52,7 @@ async def query_reporting_schemas(
 
     session = get_session(info)
     await authenticate_project(info, project_id)
-    await authenticate(info, project_id)
+    await authenticate(info, project_id, check_public=True)
 
     query = select(models_schema.ReportingSchema)
 

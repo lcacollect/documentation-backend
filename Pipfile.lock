@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d60efbf34ff42f2911b7ae9c4827bdde2f374354c5666fc4f69bbb6de95bfb4f"
+            "sha256": "40908eb166a9d1e72837f76a8c7f3b4f03cfa1f5709e6f8ad1052840b72a1ec9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -265,7 +265,7 @@
                 "sha256:f779d3ad205f108d14e99bb3859aa7dd8e9c68874617c72354d7ecaec2a054ac",
                 "sha256:f87f746ee241d30d6ed93969de31e5ffd09a2961a051e60ae6bddde9ec3583aa"
             ],
-            "markers": "python_version >= '3.7'",
+            "markers": "python_full_version >= '3.7.0'",
             "version": "==3.2.0"
         },
         "click": {
@@ -310,7 +310,7 @@
                 "sha256:57c6fbaaeaaf39c891292012060beb141791735dbb4004798328fc2c467402d8",
                 "sha256:8dcfae8c7460a2f84b4072e26f1c9f4101ca20c071649cb7c34e8b6a93d58984"
             ],
-            "markers": "python_version >= '3.8' and python_version < '4'",
+            "markers": "python_version >= '3.8' and python_version < '4.0'",
             "version": "==2.4.2"
         },
         "ecdsa": {
@@ -523,11 +523,11 @@
         },
         "lcacollect-config": {
             "hashes": [
-                "sha256:20c3e0ad95fa0415fe4b2058a27e171c3acc89f77c0427b8c4e89e558c3ea25a",
-                "sha256:e7c2c963df8f752436aa07e9cac009be0fe09eb4447ba4058c12c10758cae55f"
+                "sha256:0fb6604fff74a4a0c1cabb43ccb4219377a886035a21ed9b72dafeeca245f3c3",
+                "sha256:6695ef8d687e93e717cd67bb01cfc3cd9dce71e5f0056642355d2ff42eab8c49"
             ],
             "index": "pypi",
-            "version": "==1.6.2"
+            "version": "==1.7.0"
         },
         "lcax": {
             "hashes": [
@@ -1534,7 +1534,7 @@
                 "sha256:f779d3ad205f108d14e99bb3859aa7dd8e9c68874617c72354d7ecaec2a054ac",
                 "sha256:f87f746ee241d30d6ed93969de31e5ffd09a2961a051e60ae6bddde9ec3583aa"
             ],
-            "markers": "python_version >= '3.7'",
+            "markers": "python_full_version >= '3.7.0'",
             "version": "==3.2.0"
         },
         "click": {
@@ -1929,11 +1929,11 @@
         },
         "pluggy": {
             "hashes": [
-                "sha256:c2fd55a7d7a3863cba1a013e4e2414658b1d07b6bc57b3919e0c63c9abb99849",
-                "sha256:d12f0c4b579b15f5e054301bb226ee85eeeba08ffec228092f8defbaa3a4c4b3"
+                "sha256:cf61ae8f126ac6f7c451172cf30e3e43d3ca77615509771b3a984a0730651e12",
+                "sha256:d89c696a773f8bd377d18e5ecda92b7a3793cbe66c87060a6fb58c7b6e1061f7"
             ],
-            "markers": "python_version >= '3.7'",
-            "version": "==1.2.0"
+            "markers": "python_version >= '3.8'",
+            "version": "==1.3.0"
         },
         "pre-commit": {
             "hashes": [

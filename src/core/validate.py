@@ -19,7 +19,11 @@ def is_project_member(info: Info, members) -> bool:
 
 
 @cached(ttl=60)
-async def authenticate(info: Info, project_id: str):
+async def authenticate(info: Info, project_id: str, check_public: bool = False):
+    projects = await project_exists(project_id=project_id, token=get_token(info))
+    if check_public is True and projects.get("projects")[0].get("public") is True:
+        return True
+
     members = await get_members(project_id, get_token(info))
     if not is_project_member(info, members):
         raise AuthenticationError("User is not authenticated")

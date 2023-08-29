@@ -36,7 +36,7 @@ async def query_comments(info: Info, task_id: str, filters: Optional[CommentFilt
 
     query = select(models_comment.Comment)
     if task_id:
-        await authenticate_comment(info, task_id)
+        await authenticate_comment(info, task_id, check_public=True)
         query = query.where(models_comment.Comment.task_id == task_id)
     if [field for field in info.selected_fields if field.name == "task"]:
         query = query.options(selectinload(models_comment.Comment.task))
@@ -135,7 +135,7 @@ async def delete_comment_mutation(info: Info, id: str) -> str:
 
 
 @cached(ttl=60, key_builder=lambda function, *args, **kwargs: f"{function.__name__}_{args[1]}")
-async def authenticate_comment(info: Info, task_id: str) -> models_task.Task:
+async def authenticate_comment(info: Info, task_id: str, check_public: bool = True) -> models_task.Task:
     """Authenticates the user trying to access a comment"""
 
     session = get_session(info)
@@ -145,5 +145,5 @@ async def authenticate_comment(info: Info, task_id: str) -> models_task.Task:
         .options(selectinload(models_task.Task.reporting_schema))
     )
     task = (await session.exec(auth_query)).one()
-    await authenticate(info, task.reporting_schema.project_id)
+    await authenticate(info, task.reporting_schema.project_id, check_public=check_public)
     return task

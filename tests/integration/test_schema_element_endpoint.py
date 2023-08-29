@@ -12,7 +12,9 @@ from schema.schema_element import Unit
 
 
 @pytest.mark.asyncio
-async def test_get_schema_elements(client: AsyncClient, schema_elements, member_mocker, get_response: Callable):
+async def test_get_schema_elements(
+    client: AsyncClient, schema_elements, project_exists_mock, member_mocker, get_response: Callable
+):
     query = """
         query getElements($schemaCategoryIds: [String!]!, $commitId: String = null){
             schemaElements(schemaCategoryIds: $schemaCategoryIds, commitId: $commitId) {
@@ -44,7 +46,7 @@ async def test_get_schema_elements(client: AsyncClient, schema_elements, member_
 
 @pytest.mark.asyncio
 async def test_get_schema_elements_with_filters(
-    client: AsyncClient, schema_elements, member_mocker, get_response: Callable
+    client: AsyncClient, schema_elements, project_exists_mock, member_mocker, get_response: Callable
 ):
     query = """
         query getElements($schemaCategoryIds: [String!]!, $commitId: String = null){
@@ -121,7 +123,7 @@ async def test_create_schema_element_from_source_xlsx(
     db,
     commits,
     schema_categories,
-    project_sources,
+    xlsx_source,
     member_mocker,
     blob_client_mock_xlsx,
     get_response: Callable,

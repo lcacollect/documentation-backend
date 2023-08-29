@@ -43,11 +43,11 @@ async def schema_templates(db) -> list[SchemaTemplate]:
 
 
 @pytest.fixture
-async def reporting_schemas(db) -> list[ReportingSchema]:
+async def reporting_schemas(db, project_id) -> list[ReportingSchema]:
     schemas = []
     async with AsyncSession(db) as session:
         for i in range(4):
-            schema = ReportingSchema(name=f"Reporting Schema {i}", project_id=f"{i}")
+            schema = ReportingSchema(name=f"Reporting Schema {i}", project_id=project_id)
             session.add(schema)
             schemas.append(schema)
         await session.commit()
@@ -91,12 +91,10 @@ async def schema_categories(db, reporting_schemas) -> list[SchemaCategory]:
 
 
 @pytest.fixture
-async def project_sources(db) -> list[ProjectSource]:
+async def project_sources(db, project_id) -> list[ProjectSource]:
     sources = []
     csv_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a0"
     csv_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
-    xlsx_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a1"
-    xlsx_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
 
     async with AsyncSession(db) as session:
         for i in range(4):
@@ -104,7 +102,7 @@ async def project_sources(db) -> list[ProjectSource]:
                 type="SPECKLE" if i < 3 else "csv",
                 data_id="21b253d478" if i < 3 else csv_data_id,
                 name=f"Source {i}",
-                project_id=f"{i}",
+                project_id=project_id,
                 meta_fields=dict(speckle_url="speckle.arkitema.com"),
                 interpretation={
                     "name": "family",
@@ -121,11 +119,24 @@ async def project_sources(db) -> list[ProjectSource]:
             session.add(source)
             sources.append(source)
 
+        await session.commit()
+        [await session.refresh(source) for source in sources]
+
+    yield sources
+
+
+@pytest.fixture
+async def xlsx_source(db, project_id) -> list[ProjectSource]:
+    sources = []
+    xlsx_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a1"
+    xlsx_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
+
+    async with AsyncSession(db) as session:
         xlsx_source = ProjectSource(
             type="xlsx",
             data_id=xlsx_data_id,
-            name=f"Source 5",
-            project_id="5",
+            name=f"Source 0",
+            project_id=project_id,
             meta_fields=dict(speckle_url="speckle.arkitema.com"),
             interpretation=xlsx_interpretation,
             author_id="some_user",
@@ -364,22 +375,6 @@ def blob_client_mock_async(mocker, datafix_dir):
     mocker.patch("azure.storage.blob.aio.BlobClient.__aexit__", return_value=None)
 
 
-# @pytest.fixture
-# def upload_blob_mock(mocker):
-#     mocker.patch("azure.storage.blob.aio.BlobClient.upload_blob", return_value=asyncio.Future())
-#
-#
-# @pytest.fixture
-# def download_blob_mock(mocker, datafix_dir):
-#     data = (datafix_dir / "source_data.csv").read_bytes()
-#
-#     class MockObject:
-#         def readall(self):
-#             return data
-#
-#     mocker.patch("azure.storage.blob.BlobClient.download_blob", return_value=MockObject())
-
-
 @pytest.fixture
 async def member_mock(httpx_mock):
     httpx_mock.add_response(
@@ -400,4 +395,19 @@ async def member_mock(httpx_mock):
                 ]
             }
         },
+    )
+
+
+@pytest.fixture
+async def project_exists_mock(httpx_mock, datafix_dir, project_id):
+    project_mock = json.loads((datafix_dir / "project_exists.json").read_text())
+    content = (
+        b'{"query": "\\n        query($id: String!) {\\n            projects(filters: {id: {equal: $id}}) {\\n                id\\n                public\\n            }\\n        }\\n    ", "variables": {"id": "'
+        + project_id.encode()
+        + b'"}}'
+    )
+    httpx_mock.add_response(
+        url=f"{settings.ROUTER_URL}/graphql",
+        json=project_mock,
+        match_content=content,
     )

@@ -85,8 +85,8 @@ async def project_sources_query(
 
     sources = (await session.exec(query)).all()
 
-    _ = await authenticate(info, project_id or sources[0].project_id)
     await authenticate_project(info, project_id or sources[0].project_id)
+    _ = await authenticate(info, project_id or sources[0].project_id, check_public=True)
 
     return sources
 

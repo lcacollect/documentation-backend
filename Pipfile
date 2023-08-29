@@ -14,7 +14,7 @@ alembic = "*"
 tenacity = "*"
 pydantic = "<2.0.0"
 sqlalchemy = {extras = ["asyncio"], version = "==1.4.35"}
-lcacollect-config = "*"
+lcacollect-config = ">=1.7.0"
 azure-storage-blob = "*"
 aiocache = "*"
 pandas = "*"

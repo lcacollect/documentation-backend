@@ -8,7 +8,9 @@ from core.federation import GraphQLProjectMember
 
 
 @pytest.mark.asyncio
-async def test_get_commits(client: AsyncClient, commits, reporting_schemas, member_mock, get_response: Callable):
+async def test_get_commits(
+    client: AsyncClient, project_exists_mock, commits, reporting_schemas, member_mock, get_response: Callable
+):
     query = """
         query ($reportingSchemaId: String!) {
             commits(reportingSchemaId: $reportingSchemaId, filters: {id: {contains: "-"}}) {
