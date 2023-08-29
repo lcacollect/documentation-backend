@@ -46,9 +46,9 @@ async def query_commits(
 ) -> list[GraphQLCommit]:
     """Get all commits of a Reporting Schema"""
 
-    session = info.context.get("session")
+    session = get_session(info)
 
-    await authenticate(info, reporting_schema_id)
+    await authenticate_commit(info, reporting_schema_id)
 
     repository = (
         await session.exec(
@@ -75,7 +75,7 @@ async def authenticate_commit(info: Info, reporting_schema_id: str) -> models_sc
     session = get_session(info)
     auth_query = select(models_schema.ReportingSchema).where(models_schema.ReportingSchema.id == reporting_schema_id)
     reporting_schema = (await session.exec(auth_query)).first()
-    await authenticate(info, reporting_schema.project_id)
+    await authenticate(info, reporting_schema.project_id, check_public=True)
     return reporting_schema
 
 

@@ -80,7 +80,7 @@ async def query_schema_elements(
     ).first()
 
     if schema_category:
-        await authenticate(info, schema_category.reporting_schema.project_id)
+        await authenticate(info, schema_category.reporting_schema.project_id, check_public=True)
 
     if commit_id:
         query = select(models_element.SchemaElement).where(models_element.ElementCommitLink.commit_id == commit_id)

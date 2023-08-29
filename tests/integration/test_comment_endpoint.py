@@ -11,7 +11,9 @@ from models.comment import Comment
 
 
 @pytest.mark.asyncio
-async def test_get_comments(client: AsyncClient, comments, tasks, member_mock, get_response: Callable):
+async def test_get_comments(
+    client: AsyncClient, project_exists_mock, comments, tasks, member_mock, get_response: Callable
+):
     query = """
         query ($taskId: String!){
             comments(taskId: $taskId, filters: {text: {contains: "0"}}) {
@@ -30,7 +32,9 @@ async def test_get_comments(client: AsyncClient, comments, tasks, member_mock, g
 
 
 @pytest.mark.asyncio
-async def test_create_comment(client: AsyncClient, tasks, member_mock, get_response: Callable, mocker):
+async def test_create_comment(
+    client: AsyncClient, project_exists_mock, tasks, member_mock, get_response: Callable, mocker
+):
     users_mock = mocker.patch("schema.comment.get_users_from_azure")
     users_mock.return_value = [{"email": "test"}]
     email_mock = mocker.patch("schema.comment.send_email")
@@ -61,7 +65,9 @@ async def test_create_comment(client: AsyncClient, tasks, member_mock, get_respo
 
 
 @pytest.mark.asyncio
-async def test_update_comment(client: AsyncClient, comments, member_mock, get_response: Callable, mocker):
+async def test_update_comment(
+    client: AsyncClient, project_exists_mock, comments, member_mock, get_response: Callable, mocker
+):
     users_mock = mocker.patch("schema.comment.get_users_from_azure")
     users_mock.return_value = [{"email": "test"}]
     email_mock = mocker.patch("schema.comment.send_email")
@@ -86,7 +92,9 @@ async def test_update_comment(client: AsyncClient, comments, member_mock, get_re
 
 
 @pytest.mark.asyncio
-async def test_delete_comment(client: AsyncClient, comments, db, member_mock, get_response: Callable):
+async def test_delete_comment(
+    client: AsyncClient, project_exists_mock, comments, db, member_mock, get_response: Callable
+):
     query = f"""
         mutation {{
             deleteComment(id: "{comments[0].id}")

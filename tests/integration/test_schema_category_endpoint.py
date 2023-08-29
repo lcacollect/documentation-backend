@@ -15,6 +15,7 @@ async def test_get_schema_categories(
     client: AsyncClient,
     schema_categories,
     reporting_schemas,
+    project_exists_mock,
     member_mocker,
     get_response: Callable,
 ):
@@ -55,6 +56,7 @@ async def test_get_schema_categories_with_filters(
     client: AsyncClient,
     schema_categories,
     reporting_schemas,
+    project_exists_mock,
     member_mocker,
     get_response: Callable,
 ):
