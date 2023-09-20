@@ -64,7 +64,7 @@ def generate_lcax_schema(
         description="LCAcollect Project",
         comment=f"Exported ${datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         classification_system=classification_system,
-        emission_parts=get_assemblies(schema_categories, classification_system, assemblies),
+        emission_parts=get_assemblies(schema_categories, classification_system, assemblies, project),
         format_version=importlib.metadata.version("lcax"),
         impact_categories=[ImpactCategoryKey.gwp],
         lcia_method="EN15978",
@@ -90,6 +90,7 @@ def get_assemblies(
     schema_categories: list[models_schema.SchemaCategory],
     classification_system: str | None,
     graphql_assemblies: list[dict],
+    project: dict,
 ) -> dict[str, Assembly]:
     assemblies = {}
 
@@ -108,7 +109,7 @@ def get_assemblies(
                 description=element.description,
                 id=element.id,
                 name=element.name,
-                parts=get_parts(element, graphql_assemblies),
+                parts=get_parts(element, graphql_assemblies, project),
                 quantity=element.quantity,
                 unit=convert_to_lcax_unit(element.unit),
             )
@@ -117,7 +118,19 @@ def get_assemblies(
     return assemblies
 
 
-def get_parts(element: models_element.SchemaElement, graphql_assemblies: list[dict]) -> dict[str, EPDPart]:
+class EPDPartTransportation(EPDPart):
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+
+    transport_type: str | None
+    transport_distance: str | None
+    transport_unit = str | None
+
+
+def get_parts(
+    element: models_element.SchemaElement, graphql_assemblies: list[dict], project: dict
+) -> dict[str, EPDPart]:
     epd_parts = {}
 
     for assembly in graphql_assemblies:
@@ -143,17 +156,38 @@ def get_parts(element: models_element.SchemaElement, graphql_assemblies: list[di
                     ],
                     gwp=layer.get("epd", {}).get("gwp"),
                 )
-                epd_part = EPDPart(
-                    id=layer.get("id"),
-                    name=layer.get("name"),
-                    part_quantity=layer.get("conversionFactor"),
-                    part_unit=convert_to_lcax_unit(layer.get("unit")),
-                    reference_service_life=layer.get("referenceServiceLife"),
-                    epd_source=EPDSourceItem(epd=epd_source),
-                )
+                if hasTrasportPhase(project):
+                    epd_part = EPDPartTransportation(
+                        id=layer.get("id"),
+                        name=layer.get("name"),
+                        part_quantity=layer.get("conversionFactor"),
+                        part_unit=convert_to_lcax_unit(layer.get("unit")),
+                        reference_service_life=layer.get("referenceServiceLife"),
+                        epd_source=EPDSourceItem(epd=epd_source),
+                        transport_type=layer.get("transportType"),
+                        transport_distance=layer.get("transportDistance"),
+                        transport_unit=layer.get("transportUnit"),
+                    )
+                else:
+                    epd_part = EPDPart(
+                        id=layer.get("id"),
+                        name=layer.get("name"),
+                        part_quantity=layer.get("conversionFactor"),
+                        part_unit=convert_to_lcax_unit(layer.get("unit")),
+                        reference_service_life=layer.get("referenceServiceLife"),
+                        epd_source=EPDSourceItem(epd=epd_source),
+                    )
                 epd_parts[epd_part.id] = epd_part
 
     return epd_parts
+
+
+def hasTrasportPhase(project: dict):
+    trasportPhase = False
+    for stage in project.get("stages"):
+        if stage.get("phase").lower() == "a4":
+            trasportPhase = True
+    return trasportPhase
 
 
 def convert_to_lcax_unit(unit: str) -> Unit:

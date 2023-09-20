@@ -15,6 +15,9 @@
             "description": "",
             "conversionFactor": 1.0,
             "referenceServiceLife": 40,
+            "transportType" : "plane",
+            "transportDistance" : 10.0,
+            "transportUnit": "km",
             "epd": {
               "id": "751cf638-6c4c-4247-954e-7caf56cb5f79",
               "name": "LPG tank 2700 l / t 1,2 (overjordiske)",
@@ -47,6 +50,9 @@
             "description": "",
             "conversionFactor": 1.0,
             "referenceServiceLife": 50,
+            "transportType" : "plane",
+            "transportDistance" : 10.0,
+            "transportUnit": "km",
             "epd": {
               "id": "ccf04582-0ad2-4236-b3ba-cdb363559715",
               "name": "Gulvvarmesystem inkl. isolering, PEX (100 mm afstand)",
