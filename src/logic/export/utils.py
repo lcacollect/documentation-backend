@@ -53,6 +53,9 @@ async def query_assemblies_for_export(project_id: str, token: str) -> dict | Non
                     description
                     conversionFactor
                     referenceServiceLife
+                    transportType
+                    transportDistance
+                    transportUnit
                     epd {
                         id
                         name
