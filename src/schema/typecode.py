@@ -1,3 +1,6 @@
+import base64
+import csv
+import io
 from typing import Optional
 
 import strawberry
@@ -7,9 +10,7 @@ from sqlmodel import select
 from strawberry.types import Info
 
 import models.typecode as models_type_code
-import base64
-import csv
-import io
+
 
 @strawberry.type
 class GraphQLTypeCodeElement:
@@ -34,7 +35,7 @@ async def query_type_code_elements(
         query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.code == code)
     else:
         query = select(models_type_code.TypeCodeElement)
-    
+
     type_code_elements = await session.exec(query)
 
     return type_code_elements.all()
@@ -60,20 +61,20 @@ async def create_type_code_element(info: Info, name: str, code: str, level: int)
 async def create_type_code_element_from_source(info: Info, file: str) -> GraphQLTypeCodeElement:
     """Add a new typeCodeElement from csv file"""
     session = get_session(info)
-    data = base64.b64decode(file).decode('utf-8')
-    
+    data = base64.b64decode(file).decode("utf-8")
+
     with io.StringIO(data) as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
-            row = dict((k.lower(), v) for k,v in row.items())
+            row = dict((k.lower(), v) for k, v in row.items())
             type_code_element = models_type_code.TypeCodeElement(
-                name=row.get('name'),
-                code=row.get('code'),
-                level=row.get('level'),
+                name=row.get("name"),
+                code=row.get("code"),
+                level=row.get("level"),
             )
 
             session.add(type_code_element)
-            
+
     await session.commit()
     await session.refresh(type_code_element)
 
@@ -109,7 +110,7 @@ async def delete_type_code_element(info: Info, id: str) -> str:
     session = get_session(info)
 
     type_code_element = await session.get(models_type_code.TypeCodeElement, id)
-    
+
     await session.delete(type_code_element)
     await session.commit()
     return type_code_element

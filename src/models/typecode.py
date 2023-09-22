@@ -19,6 +19,6 @@ class TypeCode(SQLModel, table=True):
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, index=True)
     name: str
     project_id: str | None
-    
+
     # Relationships
     elements: list[TypeCodeElement] = Relationship(back_populates="typecode")

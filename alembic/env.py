@@ -25,12 +25,12 @@ from models.reporting_schema import ReportingSchema
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 from models.schema_template import SchemaTemplate
-from models.typecode import TypeCode
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 from models.source import ProjectSource
 from models.tag import Tag
+from models.typecode import TypeCode
 
 target_metadata = SQLModel.metadata
 

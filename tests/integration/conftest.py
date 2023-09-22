@@ -284,6 +284,7 @@ def csv_file(datafix_dir):
 def project_exists_mock(mocker):
     mocker.patch("lcacollect_config.validate.project_exists", return_value=True)
 
+
 @pytest.fixture
 def is_admin_mock(mocker):
     mocker.patch("core.permissions.IsAdmin.has_permission", return_value=True)
