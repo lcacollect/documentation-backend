@@ -16,6 +16,7 @@ from models.schema_template import SchemaTemplate
 from models.source import ProjectSource
 from models.tag import Tag
 from models.task import Task
+from models.typecode import TypeCodeElement
 
 
 @pytest.fixture
@@ -258,6 +259,23 @@ async def comments(db, tasks) -> list[Comment]:
 
 
 @pytest.fixture
+async def type_code_elements(db) -> list[Task]:
+    type_code_elements = []
+    async with AsyncSession(db) as session:
+        for i in range(4):
+            type_code_element = TypeCodeElement(
+                name=f"Name {i}",
+                code=f"Code {i}",
+                level=i,
+            )
+            session.add(type_code_element)
+            type_code_elements.append(type_code_element)
+        await session.commit()
+        [await session.refresh(type_code_elem) for type_code_elem in type_code_elements]
+    yield type_code_elements
+
+
+@pytest.fixture
 def csv_file(datafix_dir):
     yield open(datafix_dir / "project_source.csv", "rb")
 
@@ -265,6 +283,10 @@ def csv_file(datafix_dir):
 @pytest.fixture
 def project_exists_mock(mocker):
     mocker.patch("lcacollect_config.validate.project_exists", return_value=True)
+
+@pytest.fixture
+def is_admin_mock(mocker):
+    mocker.patch("core.permissions.IsAdmin.has_permission", return_value=True)
 
 
 @pytest.fixture
