@@ -13,7 +13,9 @@ import schema.schema_template as schema_template
 import schema.source as schema_source
 import schema.tag as schema_tag
 import schema.task as schema_task
+import schema.typecode as schema_typecode
 from core import federation
+from core.permissions import IsAdmin
 
 
 @strawberry.type
@@ -73,6 +75,11 @@ class Query:
         resolver=schema_export.export_reporting_schema_mutation,
         description=getdoc(schema_export.export_reporting_schema_mutation),
     )
+    type_code_elements: list[schema_typecode.GraphQLTypeCodeElement] = strawberry.field(
+        permission_classes=[IsAdmin],
+        resolver=schema_typecode.query_type_code_elements,
+        description=getdoc(schema_typecode.query_type_code_elements),
+    )
 
 
 @strawberry.type
@@ -101,22 +108,22 @@ class Mutation:
     add_reporting_schema: schema_reporting.GraphQLReportingCreationSchema = strawberry.mutation(
         permission_classes=[IsAuthenticated],
         resolver=schema_reporting.add_reporting_schema_mutation,
-        description=getdoc(reporting_schema.add_reporting_schema_mutation),
+        description=getdoc(schema_reporting.add_reporting_schema_mutation),
     )
     add_reporting_schema_from_template: schema_reporting.GraphQLReportingCreationSchema = strawberry.mutation(
         permission_classes=[IsAuthenticated],
         resolver=schema_reporting.add_reporting_schema_from_template_mutation,
-        description=getdoc(reporting_schema.add_reporting_schema_mutation),
+        description=getdoc(schema_reporting.add_reporting_schema_mutation),
     )
     update_reporting_schema: schema_reporting.GraphQLReportingSchema = strawberry.mutation(
         permission_classes=[IsAuthenticated],
         resolver=schema_reporting.update_reporting_schema_mutation,
-        description=getdoc(reporting_schema.update_reporting_schema_mutation),
+        description=getdoc(schema_reporting.update_reporting_schema_mutation),
     )
     delete_reporting_schema: str = strawberry.mutation(
         permission_classes=[IsAuthenticated],
         resolver=schema_reporting.delete_reporting_schema_mutation,
-        description=getdoc(reporting_schema.delete_reporting_schema_mutation),
+        description=getdoc(schema_reporting.delete_reporting_schema_mutation),
     )
 
     # Schema Category
@@ -225,6 +232,28 @@ class Mutation:
         permission_classes=[IsAuthenticated],
         resolver=schema_tag.delete_tag,
         description=getdoc(schema_tag.delete_tag),
+    )
+
+    # TypeCodeElements
+    create_type_code_element_from_source: schema_typecode.GraphQLTypeCodeElement = strawberry.mutation(
+        permission_classes=[IsAdmin],
+        resolver=schema_typecode.create_type_code_element_from_source,
+        description=getdoc(schema_typecode.create_type_code_element_from_source),
+    )
+    create_type_code_element: schema_typecode.GraphQLTypeCodeElement = strawberry.mutation(
+        permission_classes=[IsAdmin],
+        resolver=schema_typecode.create_type_code_element,
+        description=getdoc(schema_typecode.create_type_code_element),
+    )
+    update_type_code_element: schema_typecode.GraphQLTypeCodeElement = strawberry.mutation(
+        permission_classes=[IsAdmin],
+        resolver=schema_typecode.update_type_code_element,
+        description=getdoc(schema_typecode.update_type_code_element),
+    )
+    delete_type_code_element: str = strawberry.mutation(
+        permission_classes=[IsAdmin],
+        resolver=schema_typecode.delete_type_code_element,
+        description=getdoc(schema_typecode.delete_type_code_element),
     )
 
 

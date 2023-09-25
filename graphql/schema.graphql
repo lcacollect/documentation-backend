@@ -164,6 +164,13 @@ type GraphQLTask @key(fields: "id") {
   item: GraphQLSchemaElementGraphQLSchemaCategory!
 }
 
+type GraphQLTypeCodeElement {
+  id: String!
+  name: String!
+  code: String!
+  level: Int!
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -255,6 +262,18 @@ type Mutation {
 
   """Delete a tag"""
   deleteTag(id: String!): String!
+
+  """Add a new typeCodeElement from csv file"""
+  createTypeCodeElementFromSource(file: String!): GraphQLTypeCodeElement!
+
+  """Add a new typeCodeElement"""
+  createTypeCodeElement(name: String!, code: String!, level: Int!): GraphQLTypeCodeElement!
+
+  """update typeCodeElement"""
+  updateTypeCodeElement(id: String!, name: String = null, code: String = null, level: Int = null): GraphQLTypeCodeElement!
+
+  """Delete a TypeCodeElement"""
+  deleteTypeCodeElement(id: String!): String!
 }
 
 input ProjectSourceFilters {
@@ -304,6 +323,9 @@ type Query {
   Resolver for exporting the database contents as a base64 encoded string.
   """
   exportReportingSchema(reportingSchemaId: String!, exportFormat: exportFormat!): String!
+
+  """Get typeCodeElements"""
+  typeCodeElements(id: String, name: String, code: String): [GraphQLTypeCodeElement!]!
 }
 
 input ReportingSchemaFilters {
