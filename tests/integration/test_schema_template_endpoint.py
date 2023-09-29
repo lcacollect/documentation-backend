@@ -66,6 +66,7 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
                     categories {
                         name
                         path
+                        depth
                     }
                 }
             }
@@ -77,7 +78,7 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
     assert data["schemaTemplates"] == [
         {
             "name": "Schema Template 0",
-            "schema": {"name": "Schema Template 0", "categories": [{"name": "name", "path": "1"}]},
+            "schema": {"name": "Schema Template 0", "categories": [{"name": "name", "path": "code", "depth": 0}]},
         }
     ]
 
@@ -104,6 +105,7 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
                     categories{
                         name
                         path
+                        depth
                     }
                 }
             }
@@ -112,13 +114,13 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
     variables = {
         "id": data["addSchemaTemplate"]["id"],
         "name": "test",
-        "typeCodes": {"id": "112", "name": "name2", "code": "code", "level": 3},
+        "typeCodes": {"id": "112", "name": "name2", "code": "code2", "level": 3},
     }
 
     data = await get_response(client, query, variables=variables)
     assert data["updateSchemaTemplate"] == {
         "name": "test",
-        "schema": {"name": "test", "categories": [{"name": "name2", "path": "3"}]},
+        "schema": {"name": "test", "categories": [{"name": "name2", "path": "code2", "depth": 0}]},
     }
 
 
