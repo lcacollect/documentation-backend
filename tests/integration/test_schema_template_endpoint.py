@@ -45,31 +45,81 @@ async def test_get_schema_templates_with_filters(client: AsyncClient, schema_tem
 @pytest.mark.asyncio
 async def test_create_template(client: AsyncClient, get_response: Callable):
     mutation = """
-        mutation{
-            addSchemaTemplate(name: "Schema Template 0") {
+        mutation($name: String!, $typeCodes: [GraphQLTypeCodeElementInput!]){
+            addSchemaTemplate(name: $name, typeCodes: $typeCodes) {
                 name
             }
         }
     """
-    data = await get_response(client, mutation)
+    variables = {"name": "Schema Template 0", "typeCodes": {"id": "111", "name": "name", "code": "code", "level": 1}}
+    data = await get_response(client, mutation, variables=variables)
     assert data["addSchemaTemplate"] == {
         "name": "Schema Template 0",
     }
 
+    query = """
+        query {
+            schemaTemplates {
+                name
+                schema {
+                    name
+                    categories {
+                        name
+                        path
+                    }
+                }
+            }
+        }
+    """
+
+    data = await get_response(client, query)
+    assert len(data["schemaTemplates"]) == 1
+    assert data["schemaTemplates"] == [
+        {
+            "name": "Schema Template 0",
+            "schema": {"name": "Schema Template 0", "categories": [{"name": "name", "path": "1"}]},
+        }
+    ]
+
 
 @pytest.mark.asyncio
-async def test_update_schema_template(client: AsyncClient, schema_templates, get_response: Callable):
-    query = """
-        mutation($id: String!) {
-            updateSchemaTemplate(id: $id) {
+async def test_update_schema_template(client: AsyncClient, get_response: Callable):
+    mutation = """
+        mutation($name: String!, $typeCodes: [GraphQLTypeCodeElementInput!]){
+            addSchemaTemplate(name: $name, typeCodes: $typeCodes) {
+                id
                 name
             }
         }
     """
-    variables = {"id": schema_templates[0].id}
+    variables = {"name": "Schema Template 0", "typeCodes": {"id": "111", "name": "name", "code": "code", "level": 1}}
+    data = await get_response(client, mutation, variables=variables)
+
+    query = """
+        mutation($id: String!, $name: String!, $typeCodes: [GraphQLTypeCodeElementInput!]) {
+            updateSchemaTemplate(id: $id, name: $name, typeCodes: $typeCodes) {
+                name
+                schema {
+                    name
+                    categories{
+                        name
+                        path
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "id": data["addSchemaTemplate"]["id"],
+        "name": "test",
+        "typeCodes": {"id": "112", "name": "name2", "code": "code", "level": 3},
+    }
 
     data = await get_response(client, query, variables=variables)
-    assert data["updateSchemaTemplate"] == {"name": schema_templates[0].name}
+    assert data["updateSchemaTemplate"] == {
+        "name": "test",
+        "schema": {"name": "test", "categories": [{"name": "name2", "path": "3"}]},
+    }
 
 
 @pytest.mark.asyncio

@@ -27,17 +27,16 @@ async def test_get_type_code_elements_not_admin(client: AsyncClient, type_code_e
 @pytest.mark.asyncio
 async def test_get_type_code_elements(client: AsyncClient, type_code_elements, is_admin_mock, get_response: Callable):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query {
+            typeCodeElements{
                 name
                 code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
 
-    data = await get_response(client, query, variables=variables)
+    data = await get_response(client, query)
     assert len(data["typeCodeElements"]) == 4
     assert data["typeCodeElements"][0] == {
         "name": "Name 0",

@@ -21,7 +21,7 @@ class GraphQLTypeCodeElement:
 
 
 async def query_type_code_elements(
-    info: Info, id: Optional[str], name: Optional[str], code: Optional[str]
+    info: Info, id: Optional[str] = None, name: Optional[str] = None, code: Optional[str] = None
 ) -> list[GraphQLTypeCodeElement]:
     """Get typeCodeElements"""
 
