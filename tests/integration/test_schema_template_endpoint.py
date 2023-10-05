@@ -15,7 +15,31 @@ async def test_get_schema_templates(client: AsyncClient, schema_templates, get_r
         query {
             schemaTemplates {
                 name
-                schema {
+                schemas {
+                    name
+                    categories {
+                        name
+                    }
+                }
+            }
+        }
+    """
+
+    data = await get_response(client, query)
+    assert len(data["schemaTemplates"]) == 3
+    assert data["schemaTemplates"][0] == {
+        "name": "Template 0",
+        "schemas": [{"name": "Reporting Schema 0", "categories": [{"name": "Category 0"}]}],
+    }
+
+
+@pytest.mark.asyncio
+async def test_get_schema_templates_with_filters(client: AsyncClient, schema_templates, get_response: Callable):
+    query = """
+        query {
+            schemaTemplates(filters: {name: {contains: "Template 0"}}) {
+                name
+                schemas {
                     name
                 }
             }
@@ -23,23 +47,15 @@ async def test_get_schema_templates(client: AsyncClient, schema_templates, get_r
     """
 
     data = await get_response(client, query)
-    assert data["schemaTemplates"] == [
-        {"name": f"Template {i}", "schema": {"name": f"Reporting Schema {i}"}} for i in range(3)
-    ]
-
-
-@pytest.mark.asyncio
-async def test_get_schema_templates_with_filters(client: AsyncClient, schema_templates, get_response: Callable):
-    query = """
-        query {
-            schemaTemplates(filters: {name: {contains: "0"}}) {
-                name
-            }
-        }
-    """
-
-    data = await get_response(client, query)
     assert len(data["schemaTemplates"]) == 1
+    assert data["schemaTemplates"][0] == {
+        "name": "Template 0",
+        "schemas": [
+            {
+                "name": "Reporting Schema 0",
+            }
+        ],
+    }
 
 
 @pytest.mark.asyncio
@@ -51,7 +67,14 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
             }
         }
     """
-    variables = {"name": "Schema Template 0", "typeCodes": {"id": "111", "name": "name", "code": "code", "level": 1}}
+    variables = {
+        "name": "Schema Template 0",
+        "typeCodes": [
+            {"name": "name", "id": "Idcode", "level": 1, "parentPath": "/"},
+            {"name": "name2", "id": "Idcode2", "level": 1, "parentPath": "/Idcode"},
+            {"name": "name4", "id": "Idcode4", "level": 1, "parentPath": "/Idcode2/Idcode3"},
+        ],
+    }
     data = await get_response(client, mutation, variables=variables)
     assert data["addSchemaTemplate"] == {
         "name": "Schema Template 0",
@@ -61,7 +84,7 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
         query {
             schemaTemplates {
                 name
-                schema {
+                schemas {
                     name
                     categories {
                         name
@@ -78,7 +101,15 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
     assert data["schemaTemplates"] == [
         {
             "name": "Schema Template 0",
-            "schema": {"name": "Schema Template 0", "categories": [{"name": "name", "path": "code", "depth": 0}]},
+            "schemas": [
+                {
+                    "name": "Schema Template 0",
+                    "categories": [
+                        {"name": "name", "path": "/", "depth": 0},
+                        {"name": "name2", "path": "/Idcode", "depth": 1},
+                    ],
+                }
+            ],
         }
     ]
 
@@ -93,14 +124,14 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
             }
         }
     """
-    variables = {"name": "Schema Template 0", "typeCodes": {"id": "111", "name": "name", "code": "code", "level": 1}}
+    variables = {"name": "Schema Template 0", "typeCodes": {"name": "name", "id": "111", "level": 1, "parentPath": "/"}}
     data = await get_response(client, mutation, variables=variables)
 
     query = """
         mutation($id: String!, $name: String!, $typeCodes: [GraphQLTypeCodeElementInput!]) {
             updateSchemaTemplate(id: $id, name: $name, typeCodes: $typeCodes) {
                 name
-                schema {
+                schemas {
                     name
                     categories{
                         name
@@ -114,13 +145,24 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
     variables = {
         "id": data["addSchemaTemplate"]["id"],
         "name": "test",
-        "typeCodes": {"id": "112", "name": "name2", "code": "code2", "level": 3},
+        "typeCodes": [
+            {"id": "112", "name": "name2", "level": 3, "parentPath": "/"},
+            {"id": "113", "name": "name3", "level": 2, "parentPath": "/112"},
+        ],
     }
 
     data = await get_response(client, query, variables=variables)
     assert data["updateSchemaTemplate"] == {
         "name": "test",
-        "schema": {"name": "test", "categories": [{"name": "name2", "path": "code2", "depth": 0}]},
+        "schemas": [
+            {
+                "name": "test",
+                "categories": [
+                    {"name": "name2", "path": "/", "depth": 0},
+                    {"name": "name3", "path": "/112", "depth": 1},
+                ],
+            }
+        ],
     }
 
 

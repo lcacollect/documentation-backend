@@ -5,10 +5,10 @@ from sqlmodel import Field, Relationship, SQLModel
 
 
 class TypeCodeElement(SQLModel, table=True):
-    id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, index=True)
+    id: Optional[str] = Field(primary_key=True, index=True)  # code
     name: str
-    code: str
     level: int
+    parent_path: str = "/"
 
     # Relationships
     typecode_id: Optional[str] = Field(foreign_key="typecode.id")

@@ -16,12 +16,12 @@ import models.typecode as models_type_code
 class GraphQLTypeCodeElement:
     id: str
     name: str
-    code: str
     level: int
+    parent_path: str  # "/parents_parent_id/parent_id" or "/" for no parent
 
 
 async def query_type_code_elements(
-    info: Info, id: Optional[str] = None, name: Optional[str] = None, code: Optional[str] = None
+    info: Info, id: Optional[str] = None, name: Optional[str] = None
 ) -> list[GraphQLTypeCodeElement]:
     """Get typeCodeElements"""
 
@@ -31,8 +31,6 @@ async def query_type_code_elements(
         query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.id == id)
     elif name:
         query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.name == name)
-    elif code:
-        query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.code == code)
     else:
         query = select(models_type_code.TypeCodeElement)
 
@@ -41,14 +39,17 @@ async def query_type_code_elements(
     return type_code_elements.all()
 
 
-async def create_type_code_element(info: Info, name: str, code: str, level: int) -> GraphQLTypeCodeElement:
+async def create_type_code_element(
+    info: Info, name: str, code: str, level: int, parent_path: str = "/"
+) -> GraphQLTypeCodeElement:
     """Add a new typeCodeElement"""
     session = get_session(info)
 
     type_code_element = models_type_code.TypeCodeElement(
+        id=code,
         name=name,
-        code=code,
         level=level,
+        parent_path=parent_path,
     )
 
     session.add(type_code_element)
@@ -67,11 +68,13 @@ async def create_type_code_element_from_source(info: Info, file: str) -> GraphQL
         reader = csv.DictReader(csv_file)
         for row in reader:
             row = dict((k.lower(), v) for k, v in row.items())
-            type_code_element = models_type_code.TypeCodeElement(
-                name=row.get("name"),
-                code=row.get("code"),
-                level=row.get("level"),
-            )
+            if row.get("code"):
+                type_code_element = models_type_code.TypeCodeElement(
+                    name=row.get("name"),
+                    id=row.get("code"),
+                    level=row.get("level"),
+                    parent_path=row.get("parentpath", "/"),
+                )
 
             session.add(type_code_element)
 
@@ -82,7 +85,7 @@ async def create_type_code_element_from_source(info: Info, file: str) -> GraphQL
 
 
 async def update_type_code_element(
-    info: Info, id: str, name: Optional[str] = None, code: Optional[str] = None, level: Optional[int] = None
+    info: Info, id: str, name: Optional[str] = None, level: Optional[int] = None, parent_path: Optional[str] = "/"
 ) -> GraphQLTypeCodeElement:
     """update typeCodeElement"""
     session = get_session(info)
@@ -91,7 +94,7 @@ async def update_type_code_element(
     if not type_code_element:
         raise DatabaseItemNotFound(f"Could not find TypeCodeElement with id: {id}.")
 
-    kwargs = {"name": name, "code": code, "level": level}
+    kwargs = {"name": name, "level": level, "parent_path": parent_path}
     for key, value in kwargs.items():
         if value is not None:
             setattr(type_code_element, key, value)

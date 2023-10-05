@@ -3,8 +3,8 @@ from typing import Optional
 import strawberry
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
+from sqlalchemy.orm import Query, selectinload
 from sqlmodel import select
-from strawberry import UNSET
 from strawberry.types import Info
 
 import models.reporting_schema as models_reporting
@@ -18,56 +18,32 @@ from schema.inputs import SchemaTemplateFilters
 class GraphQLSchemaTemplate:
     id: str
     name: str
-    schema: schema_reporting.GraphQLReportingSchema | None
-
-
-@strawberry.input
-class ReportingSchemaInput:
-    id: str
-    name: Optional[str] = UNSET
-    tmplt: Optional[str] = UNSET
+    schemas: list[schema_reporting.GraphQLReportingSchema] | None
 
 
 @strawberry.input
 class GraphQLTypeCodeElementInput:
     id: str
     name: str
-    code: str
-    level: int
+    level: int | None
+    parent_path: str  # "/parents_parent_id/parent_id" or "/" for no parent
 
 
 async def query_schema_templates(
     info: Info, filters: Optional[SchemaTemplateFilters] = None
 ) -> list[GraphQLSchemaTemplate]:
     """Query Schema Templates"""
-    templates = []
     session = info.context.get("session")
-    query = (
-        select(models_template.SchemaTemplate, models_reporting.ReportingSchema)
-        .join(models_reporting.ReportingSchema)
-        .where(models_reporting.ReportingSchema.project_id == None)
-    )
+
+    query = select(models_template.SchemaTemplate)
+    query = check_return_values(info, query)
+
     if filters:
         query = filter_model_query(models_template.SchemaTemplate, filters, query=query)
-    schema_templates = (await session.exec(query)).all()
 
-    for template, schema in schema_templates:
-        query = select(models_category.SchemaCategory).where(
-            models_category.SchemaCategory.reporting_schema_id == schema.id
-        )
-        schema_categories = (await session.exec(query)).all()
+    schema_templates = (await session.exec(query)).unique().all()
 
-        joined_schema = schema_reporting.GraphQLReportingSchema(
-            id=schema.id,
-            name=schema.name,
-            categories=schema_categories,
-            project_id=schema.project_id,
-            template_id=template.id,
-        )
-        template = GraphQLSchemaTemplate(id=template.id, name=template.name, schema=joined_schema)
-        templates.append(template)
-
-    return templates
+    return schema_templates
 
 
 async def add_schema_template_mutation(
@@ -82,10 +58,20 @@ async def add_schema_template_mutation(
     session.add(reporting_schema)
 
     if type_codes:
+        ids = [type_code.id for type_code in type_codes]
         for type_code in type_codes:
-            schema_category = models_category.SchemaCategory(
-                name=type_code.name, path=type_code.code, depth=type_code.level, reporting_schema=reporting_schema
-            )
+            if getattr(type_code, "parent_path", "/") == "/":
+                schema_category = models_category.SchemaCategory(
+                    name=type_code.name, path="/", reporting_schema=reporting_schema
+                )
+            else:
+                parent_ids = list(filter(None, type_code.parent_path.split("/")))
+                if all(parent_id in ids for parent_id in parent_ids):
+                    schema_category = models_category.SchemaCategory(
+                        name=type_code.name,
+                        path=type_code.parent_path,
+                        reporting_schema=reporting_schema,
+                    )
             session.add(schema_category)
 
     await session.commit()
@@ -95,23 +81,12 @@ async def add_schema_template_mutation(
     session.add(schema_template)
     await session.commit()
 
-    await session.refresh(schema_template)
+    query = select(models_template.SchemaTemplate).where(models_template.SchemaTemplate.id == schema_template.id)
+    query = check_return_values(info, query)
 
-    query = select(models_category.SchemaCategory).where(
-        models_category.SchemaCategory.reporting_schema_id == reporting_schema.id
-    )
-    schema_categories = (await session.exec(query)).all()
+    schema_template = (await session.exec(query)).first()
 
-    joined_schema = schema_reporting.GraphQLReportingSchema(
-        id=reporting_schema.id,
-        name=reporting_schema.name,
-        categories=schema_categories,
-        project_id=reporting_schema.project_id,
-        template_id=schema_template.id,
-    )
-    template = GraphQLSchemaTemplate(id=schema_template.id, name=schema_template.name, schema=joined_schema)
-
-    return template
+    return schema_template
 
 
 async def update_schema_template_mutation(
@@ -147,31 +122,31 @@ async def update_schema_template_mutation(
                 session.delete(schema_category)
                 await session.commit()
 
-            # update
+            # add
+            ids = [type_code.id for type_code in type_codes]
             for type_code in type_codes:
-                new_schema_category = models_category.SchemaCategory(
-                    name=type_code.name, path=type_code.code, depth=type_code.level, reporting_schema=reporting_schema
-                )
-                session.add(new_schema_category)
+                if getattr(type_code, "parent_path", "/") == "/":
+                    schema_category = models_category.SchemaCategory(
+                        name=type_code.name, path="/", reporting_schema=reporting_schema
+                    )
+                else:
+                    parent_ids = list(filter(None, type_code.parent_path.split("/")))
+                    if all(parent_id in ids for parent_id in parent_ids):
+                        schema_category = models_category.SchemaCategory(
+                            name=type_code.name,
+                            path=type_code.parent_path,
+                            reporting_schema=reporting_schema,
+                        )
+                session.add(schema_category)
 
-    await session.commit()
-    await session.refresh(schema_template)
-    await session.refresh(reporting_schema)
+        await session.commit()
 
-    query = select(models_category.SchemaCategory).where(
-        models_category.SchemaCategory.reporting_schema_id == reporting_schema.id
-    )
-    schema_categories = (await session.exec(query)).all()
+    query = select(models_template.SchemaTemplate).where(models_template.SchemaTemplate.id == schema_template.id)
+    query = check_return_values(info, query)
 
-    joined_schema = schema_reporting.GraphQLReportingSchema(
-        id=reporting_schema.id,
-        name=reporting_schema.name,
-        categories=schema_categories,
-        project_id=reporting_schema.project_id,
-        template_id=reporting_schema.id,
-    )
+    schema_template = (await session.exec(query)).first()
 
-    return GraphQLSchemaTemplate(id=schema_template.id, name=schema_template.name, schema=joined_schema)
+    return schema_template
 
 
 async def delete_schema_template_mutation(info: Info, id: str) -> str:
@@ -197,3 +172,21 @@ def is_project_member(info: Info, members) -> bool:
             return True
 
     return False
+
+
+def check_return_values(info: Info, query: Query) -> Query:
+    joined_query = query
+    for field in info.selected_fields:
+        for template_fields in field.selections:
+            if template_fields.name == "schemas":
+                joined_query = query.options(selectinload(models_template.SchemaTemplate.schemas)).where(
+                    models_reporting.ReportingSchema.project_id == None
+                )
+                for schema_field in template_fields.selections:
+                    if schema_field.name == "categories":
+                        joined_query = query.options(
+                            selectinload(models_template.SchemaTemplate.schemas).selectinload(
+                                models_reporting.ReportingSchema.categories
+                            )
+                        ).where(models_reporting.ReportingSchema.project_id == None)
+    return joined_query
