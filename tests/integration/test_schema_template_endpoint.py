@@ -10,7 +10,7 @@ from models.schema_template import SchemaTemplate
 
 
 @pytest.mark.asyncio
-async def test_get_schema_templates(client: AsyncClient, schema_templates, get_response: Callable):
+async def test_get_schema_templates(client: AsyncClient, is_admin_mock, schema_templates, get_response: Callable):
     query = """
         query {
             schemaTemplates {
@@ -34,7 +34,9 @@ async def test_get_schema_templates(client: AsyncClient, schema_templates, get_r
 
 
 @pytest.mark.asyncio
-async def test_get_schema_templates_with_filters(client: AsyncClient, schema_templates, get_response: Callable):
+async def test_get_schema_templates_with_filters(
+    client: AsyncClient, is_admin_mock, schema_templates, get_response: Callable
+):
     query = """
         query {
             schemaTemplates(filters: {name: {contains: "Template 0"}}) {
@@ -59,7 +61,7 @@ async def test_get_schema_templates_with_filters(client: AsyncClient, schema_tem
 
 
 @pytest.mark.asyncio
-async def test_create_template(client: AsyncClient, get_response: Callable):
+async def test_create_template(client: AsyncClient, get_response: Callable, is_admin_mock):
     mutation = """
         mutation($name: String!, $typeCodes: [GraphQLTypeCodeElementInput!]){
             addSchemaTemplate(name: $name, typeCodes: $typeCodes) {
@@ -70,9 +72,9 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
     variables = {
         "name": "Schema Template 0",
         "typeCodes": [
-            {"name": "name", "id": "Idcode", "level": 1, "parentPath": "/"},
-            {"name": "name2", "id": "Idcode2", "level": 1, "parentPath": "/Idcode"},
-            {"name": "name4", "id": "Idcode4", "level": 1, "parentPath": "/Idcode2/Idcode3"},
+            {"id": "test", "name": "name", "code": "Idcode", "level": 1, "parentPath": "/"},
+            {"id": "test2", "name": "name2", "code": "Idcode2", "level": 1, "parentPath": "/Idcode"},
+            {"id": "test4", "name": "name4", "code": "Idcode4", "level": 1, "parentPath": "/Idcode2/Idcode3"},
         ],
     }
     data = await get_response(client, mutation, variables=variables)
@@ -115,7 +117,7 @@ async def test_create_template(client: AsyncClient, get_response: Callable):
 
 
 @pytest.mark.asyncio
-async def test_update_schema_template(client: AsyncClient, get_response: Callable):
+async def test_update_schema_template(client: AsyncClient, get_response: Callable, is_admin_mock):
     mutation = """
         mutation($name: String!, $typeCodes: [GraphQLTypeCodeElementInput!]){
             addSchemaTemplate(name: $name, typeCodes: $typeCodes) {
@@ -124,7 +126,10 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
             }
         }
     """
-    variables = {"name": "Schema Template 0", "typeCodes": {"name": "name", "id": "111", "level": 1, "parentPath": "/"}}
+    variables = {
+        "name": "Schema Template 0",
+        "typeCodes": {"id": "test", "name": "name", "code": "111", "level": 1, "parentPath": "/"},
+    }
     data = await get_response(client, mutation, variables=variables)
 
     query = """
@@ -146,8 +151,8 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
         "id": data["addSchemaTemplate"]["id"],
         "name": "test",
         "typeCodes": [
-            {"id": "112", "name": "name2", "level": 3, "parentPath": "/"},
-            {"id": "113", "name": "name3", "level": 2, "parentPath": "/112"},
+            {"id": "test", "code": "112", "name": "name2", "level": 3, "parentPath": "/"},
+            {"id": "test2", "code": "113", "name": "name3", "level": 2, "parentPath": "/112"},
         ],
     }
 
@@ -167,7 +172,9 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
 
 
 @pytest.mark.asyncio
-async def test_delete_schema_templates(client: AsyncClient, schema_templates, db, get_response: Callable):
+async def test_delete_schema_templates(
+    client: AsyncClient, schema_templates, db, get_response: Callable, is_admin_mock
+):
     query = f"""
         mutation {{
             deleteSchemaTemplate(id: "{schema_templates[0].id}")

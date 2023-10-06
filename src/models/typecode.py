@@ -5,7 +5,8 @@ from sqlmodel import Field, Relationship, SQLModel
 
 
 class TypeCodeElement(SQLModel, table=True):
-    id: Optional[str] = Field(primary_key=True, index=True)  # code
+    id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, index=True)
+    code: str
     name: str
     level: int
     parent_path: str = "/"

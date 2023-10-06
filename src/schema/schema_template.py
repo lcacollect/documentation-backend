@@ -23,8 +23,9 @@ class GraphQLSchemaTemplate:
 
 @strawberry.input
 class GraphQLTypeCodeElementInput:
-    id: str
+    id: str | None
     name: str
+    code: str
     level: int | None
     parent_path: str  # "/parents_parent_id/parent_id" or "/" for no parent
 
@@ -58,24 +59,25 @@ async def add_schema_template_mutation(
     session.add(reporting_schema)
 
     if type_codes:
-        ids = [type_code.id for type_code in type_codes]
+        codes = [type_code.code for type_code in type_codes]
         for type_code in type_codes:
+            schema_category = ""
             if getattr(type_code, "parent_path", "/") == "/":
                 schema_category = models_category.SchemaCategory(
                     name=type_code.name, path="/", reporting_schema=reporting_schema
                 )
             else:
-                parent_ids = list(filter(None, type_code.parent_path.split("/")))
-                if all(parent_id in ids for parent_id in parent_ids):
+                parent_codes = list(filter(None, type_code.parent_path.split("/")))
+                if all(parent_code in codes for parent_code in parent_codes):
                     schema_category = models_category.SchemaCategory(
                         name=type_code.name,
                         path=type_code.parent_path,
                         reporting_schema=reporting_schema,
                     )
-            session.add(schema_category)
+            if schema_category:
+                session.add(schema_category)
 
     await session.commit()
-    await session.refresh(schema_category)
 
     schema_template.original_id = reporting_schema.id
     session.add(schema_template)
@@ -111,33 +113,36 @@ async def update_schema_template_mutation(
         session.add(schema_template)
         session.add(reporting_schema)
 
-        if type_codes:
-            query = select(models_category.SchemaCategory).where(
-                models_category.SchemaCategory.reporting_schema_id == reporting_schema.id
-            )
-            schema_categories = (await session.exec(query)).all()
-            # remove
-            for schema_category in schema_categories:
-                schema_category.reporting_schema_id = None
-                session.delete(schema_category)
-                await session.commit()
+        query = select(models_category.SchemaCategory).where(
+            models_category.SchemaCategory.reporting_schema_id == reporting_schema.id
+        )
+        schema_categories = (await session.exec(query)).all()
 
+        # remove
+        for schema_category in schema_categories:
+            schema_category.reporting_schema_id = None
+            session.delete(schema_category)
+            await session.commit()
+
+        if type_codes:
             # add
-            ids = [type_code.id for type_code in type_codes]
+            codes = [type_code.code for type_code in type_codes]
             for type_code in type_codes:
+                schema_category = ""
                 if getattr(type_code, "parent_path", "/") == "/":
                     schema_category = models_category.SchemaCategory(
                         name=type_code.name, path="/", reporting_schema=reporting_schema
                     )
                 else:
-                    parent_ids = list(filter(None, type_code.parent_path.split("/")))
-                    if all(parent_id in ids for parent_id in parent_ids):
+                    parent_codes = list(filter(None, type_code.parent_path.split("/")))
+                    if all(parent_code in codes for parent_code in parent_codes):
                         schema_category = models_category.SchemaCategory(
                             name=type_code.name,
                             path=type_code.parent_path,
                             reporting_schema=reporting_schema,
                         )
-                session.add(schema_category)
+                if schema_category:
+                    session.add(schema_category)
 
         await session.commit()
 

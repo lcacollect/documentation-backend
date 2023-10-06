@@ -166,15 +166,17 @@ type GraphQLTask @key(fields: "id") {
 
 type GraphQLTypeCodeElement {
   id: String!
+  code: String!
   name: String!
   level: Int!
   parentPath: String!
 }
 
 input GraphQLTypeCodeElementInput {
-  id: String!
+  id: String
   name: String!
-  level: Int!
+  code: String!
+  level: Int
   parentPath: String!
 }
 
@@ -277,7 +279,7 @@ type Mutation {
   createTypeCodeElement(name: String!, code: String!, level: Int!, parentPath: String! = "/"): GraphQLTypeCodeElement!
 
   """update typeCodeElement"""
-  updateTypeCodeElement(id: String!, name: String = null, level: Int = null, parentPath: String = "/"): GraphQLTypeCodeElement!
+  updateTypeCodeElement(id: String!, name: String = null, level: Int = null, code: String = null, parentPath: String = "/"): GraphQLTypeCodeElement!
 
   """Delete a TypeCodeElement"""
   deleteTypeCodeElement(id: String!): String!
@@ -332,7 +334,7 @@ type Query {
   exportReportingSchema(reportingSchemaId: String!, exportFormat: exportFormat!): String!
 
   """Get typeCodeElements"""
-  typeCodeElements(id: String = null, name: String = null): [GraphQLTypeCodeElement!]!
+  typeCodeElements(id: String = null, name: String = null, code: String = null): [GraphQLTypeCodeElement!]!
 }
 
 input ReportingSchemaFilters {
