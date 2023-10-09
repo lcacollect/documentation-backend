@@ -73,8 +73,8 @@ async def test_create_template(client: AsyncClient, get_response: Callable, is_a
         "name": "Schema Template 0",
         "typeCodes": [
             {"id": "test", "name": "name", "code": "Idcode", "level": 1, "parentPath": "/"},
-            {"id": "test2", "name": "name2", "code": "Idcode2", "level": 1, "parentPath": "/Idcode"},
-            {"id": "test4", "name": "name4", "code": "Idcode4", "level": 1, "parentPath": "/Idcode2/Idcode3"},
+            {"id": "test2", "name": "name2", "code": "Idcode2", "level": 1, "parentPath": "/test"},
+            {"id": "test4", "name": "name4", "code": "Idcode4", "level": 1, "parentPath": "/test/test3"},
         ],
     }
     data = await get_response(client, mutation, variables=variables)
@@ -108,7 +108,7 @@ async def test_create_template(client: AsyncClient, get_response: Callable, is_a
                     "name": "Schema Template 0",
                     "categories": [
                         {"name": "name", "path": "/", "depth": 0},
-                        {"name": "name2", "path": "/Idcode", "depth": 1},
+                        {"name": "name2", "path": "/test", "depth": 1},
                     ],
                 }
             ],
@@ -152,7 +152,7 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
         "name": "test",
         "typeCodes": [
             {"id": "test", "code": "112", "name": "name2", "level": 3, "parentPath": "/"},
-            {"id": "test2", "code": "113", "name": "name3", "level": 2, "parentPath": "/112"},
+            {"id": "test2", "code": "113", "name": "name3", "level": 2, "parentPath": "/test"},
         ],
     }
 
@@ -164,7 +164,7 @@ async def test_update_schema_template(client: AsyncClient, get_response: Callabl
                 "name": "test",
                 "categories": [
                     {"name": "name2", "path": "/", "depth": 0},
-                    {"name": "name3", "path": "/112", "depth": 1},
+                    {"name": "name3", "path": "/test", "depth": 1},
                 ],
             }
         ],

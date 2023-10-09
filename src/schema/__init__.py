@@ -233,7 +233,7 @@ class Mutation:
     )
 
     # TypeCodeElements
-    create_type_code_element_from_source: schema_typecode.GraphQLTypeCodeElement = strawberry.mutation(
+    create_type_code_element_from_source: str = strawberry.mutation(
         permission_classes=[IsAdmin],
         resolver=schema_typecode.create_type_code_element_from_source,
         description=getdoc(schema_typecode.create_type_code_element_from_source),

@@ -59,7 +59,7 @@ async def add_schema_template_mutation(
     session.add(reporting_schema)
 
     if type_codes:
-        codes = [type_code.code for type_code in type_codes]
+        type_code_ids = [type_code.id for type_code in type_codes]
         for type_code in type_codes:
             schema_category = ""
             if getattr(type_code, "parent_path", "/") == "/":
@@ -68,7 +68,7 @@ async def add_schema_template_mutation(
                 )
             else:
                 parent_codes = list(filter(None, type_code.parent_path.split("/")))
-                if all(parent_code in codes for parent_code in parent_codes):
+                if all(parent_code in type_code_ids for parent_code in parent_codes):
                     schema_category = models_category.SchemaCategory(
                         name=type_code.name,
                         path=type_code.parent_path,
@@ -126,7 +126,7 @@ async def update_schema_template_mutation(
 
         if type_codes:
             # add
-            codes = [type_code.code for type_code in type_codes]
+            type_code_ids = [type_code.id for type_code in type_codes]
             for type_code in type_codes:
                 schema_category = ""
                 if getattr(type_code, "parent_path", "/") == "/":
@@ -135,7 +135,7 @@ async def update_schema_template_mutation(
                     )
                 else:
                     parent_codes = list(filter(None, type_code.parent_path.split("/")))
-                    if all(parent_code in codes for parent_code in parent_codes):
+                    if all(parent_code in type_code_ids for parent_code in parent_codes):
                         schema_category = models_category.SchemaCategory(
                             name=type_code.name,
                             path=type_code.parent_path,

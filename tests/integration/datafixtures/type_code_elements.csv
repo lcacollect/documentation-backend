@@ -1,3 +1,5 @@
 Code,Name,Level,parentPath
-1,Bygningsbasis,1,/1
-10,Terrn,2,/1/10
+1,Bygningsbasis,1,/
+102,Terrn,3,/1/10
+10,Terrn,2,/1
+11, aaa, 2,/20

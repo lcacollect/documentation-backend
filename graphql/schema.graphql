@@ -170,6 +170,7 @@ type GraphQLTypeCodeElement {
   name: String!
   level: Int!
   parentPath: String!
+  parentCode: String!
 }
 
 input GraphQLTypeCodeElementInput {
@@ -273,7 +274,7 @@ type Mutation {
   deleteTag(id: String!): String!
 
   """Add a new typeCodeElement from csv file"""
-  createTypeCodeElementFromSource(file: String!): GraphQLTypeCodeElement!
+  createTypeCodeElementFromSource(file: String!): String!
 
   """Add a new typeCodeElement"""
   createTypeCodeElement(name: String!, code: String!, level: Int!, parentPath: String! = "/"): GraphQLTypeCodeElement!

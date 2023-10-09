@@ -210,9 +210,7 @@ async def test_add_type_code_elements_from_source(
 
     query = """
         mutation ($file: String!){
-            createTypeCodeElementFromSource(file: $file) {
-                id
-            }
+            createTypeCodeElementFromSource(file: $file)
         }
     """
     with open(datafix_dir / "type_code_elements.csv", "rb") as file:
@@ -224,6 +222,7 @@ async def test_add_type_code_elements_from_source(
     query = """
         query ($id: String, $name: String){
             typeCodeElements(id: $id, name: $name) {
+                id
                 code
                 name
                 level
@@ -235,5 +234,11 @@ async def test_add_type_code_elements_from_source(
 
     data = await get_response(client, query, variables=variables)
 
-    assert len(data["typeCodeElements"]) == 2
-    assert data["typeCodeElements"][1] == {"name": "Terrn", "code": "10", "level": 2, "parentPath": "/1/10"}
+    assert len(data["typeCodeElements"]) == 3
+    assert data["typeCodeElements"][1] == {
+        "name": "Terrn",
+        "code": "10",
+        "level": 2,
+        "parentPath": f'/{data["typeCodeElements"][0]["id"]}',
+        "id": data["typeCodeElements"][1]["id"],
+    }
