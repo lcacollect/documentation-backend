@@ -264,9 +264,7 @@ async def type_code_elements(db) -> list[Task]:
     async with AsyncSession(db) as session:
         for i in range(4):
             type_code_element = TypeCodeElement(
-                name=f"Name {i}",
-                code=f"Code {i}",
-                level=i,
+                name=f"Name {i}", code=f"Code {i}", level=i, parent_path=f"/Code {i-1}" if i != 0 else "/"
             )
             session.add(type_code_element)
             type_code_elements.append(type_code_element)

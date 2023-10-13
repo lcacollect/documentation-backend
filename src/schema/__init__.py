@@ -28,10 +28,8 @@ class Query:
         resolver=schema_source.project_sources_query,
         description=getdoc(schema_source.project_sources_query),
     )
-
-    # Reporting Schema
     schema_templates: list[schema_template.GraphQLSchemaTemplate] = strawberry.field(
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAdmin],
         resolver=schema_template.query_schema_templates,
         description=getdoc(schema_template.query_schema_templates),
     )
@@ -89,17 +87,17 @@ class Mutation:
 
     # Schema Template
     add_schema_template: schema_template.GraphQLSchemaTemplate = strawberry.mutation(
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAdmin],
         resolver=schema_template.add_schema_template_mutation,
         description=getdoc(schema_template.add_schema_template_mutation),
     )
     update_schema_template: schema_template.GraphQLSchemaTemplate = strawberry.mutation(
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAdmin],
         resolver=schema_template.update_schema_template_mutation,
         description=getdoc(schema_template.update_schema_template_mutation),
     )
     delete_schema_template: str = strawberry.mutation(
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAdmin],
         resolver=schema_template.delete_schema_template_mutation,
         description=getdoc(schema_template.delete_schema_template_mutation),
     )
@@ -235,7 +233,7 @@ class Mutation:
     )
 
     # TypeCodeElements
-    create_type_code_element_from_source: schema_typecode.GraphQLTypeCodeElement = strawberry.mutation(
+    create_type_code_element_from_source: str = strawberry.mutation(
         permission_classes=[IsAdmin],
         resolver=schema_typecode.create_type_code_element_from_source,
         description=getdoc(schema_typecode.create_type_code_element_from_source),

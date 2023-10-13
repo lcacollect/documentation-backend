@@ -1,8 +1,8 @@
 import base64
-import csv
 import io
 from typing import Optional
 
+import pandas as pd
 import strawberry
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
@@ -15,13 +15,29 @@ import models.typecode as models_type_code
 @strawberry.type
 class GraphQLTypeCodeElement:
     id: str
-    name: str
     code: str
+    name: str
     level: int
+    parent_path: str  # "/parents_parent_id/parent_id" or "/" for no parent
+
+    @strawberry.field
+    async def parent_code(self, info: Info) -> str:
+        session = info.context.get("session")
+        path = list(filter(None, self.parent_path.split("/")))
+        parent_code = "/"
+        if path:
+            if self.level == 2:
+                parent = await session.get(models_type_code.TypeCodeElement, path[-1])
+                parent_code = f"/{parent.code}"
+            if self.level == 3:
+                parent1 = await session.get(models_type_code.TypeCodeElement, path[0])
+                parent2 = await session.get(models_type_code.TypeCodeElement, path[1])
+                parent_code = f"/{parent1.code}/{parent2.code}"
+        return parent_code
 
 
 async def query_type_code_elements(
-    info: Info, id: Optional[str], name: Optional[str], code: Optional[str]
+    info: Info, id: Optional[str] = None, name: Optional[str] = None, code: Optional[str] = None
 ) -> list[GraphQLTypeCodeElement]:
     """Get typeCodeElements"""
 
@@ -41,14 +57,17 @@ async def query_type_code_elements(
     return type_code_elements.all()
 
 
-async def create_type_code_element(info: Info, name: str, code: str, level: int) -> GraphQLTypeCodeElement:
+async def create_type_code_element(
+    info: Info, name: str, code: str, level: int, parent_path: str = "/"
+) -> GraphQLTypeCodeElement:
     """Add a new typeCodeElement"""
     session = get_session(info)
 
     type_code_element = models_type_code.TypeCodeElement(
-        name=name,
         code=code,
+        name=name,
         level=level,
+        parent_path=parent_path,
     )
 
     session.add(type_code_element)
@@ -58,31 +77,57 @@ async def create_type_code_element(info: Info, name: str, code: str, level: int)
     return type_code_element
 
 
-async def create_type_code_element_from_source(info: Info, file: str) -> GraphQLTypeCodeElement:
+async def create_type_code_element_from_source(info: Info, file: str) -> str:
     """Add a new typeCodeElement from csv file"""
     session = get_session(info)
     data = base64.b64decode(file).decode("utf-8")
 
-    with io.StringIO(data) as csv_file:
-        reader = csv.DictReader(csv_file)
-        for row in reader:
-            row = dict((k.lower(), v) for k, v in row.items())
-            type_code_element = models_type_code.TypeCodeElement(
-                name=row.get("name"),
-                code=row.get("code"),
-                level=row.get("level"),
-            )
+    def _add_type_code(dataf: pd.DataFrame, level: int, code_ids: dict[str, str]):
+        for _index, row in dataf.iterrows():
+            path = list(filter(None, row.get("parentPath", "/").split("/")))
+            formatted_path = "/"
+            try:
+                if level == 2:
+                    formatted_path = f"/{code_ids[path[0]]}"
+                if level == 3:
+                    formatted_path = f"/{code_ids[path[0]]}/{code_ids[path[1]]}"
+            except (KeyError, IndexError):
+                return
 
+            type_code_element = models_type_code.TypeCodeElement(
+                name=row.get("Name"),
+                code=row.get("Code"),
+                level=row.get("Level"),
+                parent_path=formatted_path,
+            )
+            code_ids.update({type_code_element.code: type_code_element.id})
             session.add(type_code_element)
 
-    await session.commit()
-    await session.refresh(type_code_element)
+    with io.StringIO(data) as csv_file:
+        df = pd.read_csv(csv_file, sep=",")
+        code_ids = {}
 
-    return type_code_element
+        df_level1 = df[df.get("Level") == 1]
+        _add_type_code(df_level1, 1, code_ids)
+
+        df_level2 = df[df.get("Level") == 2]
+        _add_type_code(df_level2, 2, code_ids)
+
+        df_level3 = df[df.get("Level") == 3]
+        _add_type_code(df_level3, 3, code_ids)
+
+    await session.commit()
+
+    return "uploaded"
 
 
 async def update_type_code_element(
-    info: Info, id: str, name: Optional[str] = None, code: Optional[str] = None, level: Optional[int] = None
+    info: Info,
+    id: str,
+    name: Optional[str] = None,
+    level: Optional[int] = None,
+    code: Optional[str] = None,
+    parent_path: Optional[str] = "/",
 ) -> GraphQLTypeCodeElement:
     """update typeCodeElement"""
     session = get_session(info)
@@ -91,7 +136,7 @@ async def update_type_code_element(
     if not type_code_element:
         raise DatabaseItemNotFound(f"Could not find TypeCodeElement with id: {id}.")
 
-    kwargs = {"name": name, "code": code, "level": level}
+    kwargs = {"name": name, "level": level, "parent_path": parent_path, "code": code}
     for key, value in kwargs.items():
         if value is not None:
             setattr(type_code_element, key, value)

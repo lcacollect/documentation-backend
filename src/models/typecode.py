@@ -6,9 +6,10 @@ from sqlmodel import Field, Relationship, SQLModel
 
 class TypeCodeElement(SQLModel, table=True):
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, index=True)
-    name: str
     code: str
+    name: str
     level: int
+    parent_path: str = "/"
 
     # Relationships
     typecode_id: Optional[str] = Field(foreign_key="typecode.id")

@@ -8,15 +8,15 @@ from httpx import AsyncClient
 @pytest.mark.asyncio
 async def test_get_type_code_elements_not_admin(client: AsyncClient, type_code_elements, get_response: Callable):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
-                code
                 level
+                parentPath
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     with pytest.raises(AssertionError) as excinfo:
         await get_response(client, query, variables=variables)
@@ -27,21 +27,22 @@ async def test_get_type_code_elements_not_admin(client: AsyncClient, type_code_e
 @pytest.mark.asyncio
 async def test_get_type_code_elements(client: AsyncClient, type_code_elements, is_admin_mock, get_response: Callable):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
-                name
+        query {
+            typeCodeElements{
                 code
+                name
                 level
+                parentPath
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
 
-    data = await get_response(client, query, variables=variables)
+    data = await get_response(client, query)
     assert len(data["typeCodeElements"]) == 4
     assert data["typeCodeElements"][0] == {
-        "name": "Name 0",
         "code": "Code 0",
+        "name": "Name 0",
+        "parentPath": "/",
         "level": 0,
     }
 
@@ -49,63 +50,56 @@ async def test_get_type_code_elements(client: AsyncClient, type_code_elements, i
 @pytest.mark.asyncio
 async def test_add_type_code_elements(client: AsyncClient, is_admin_mock, get_response: Callable):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
-                code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 0
 
     query = """
-        mutation ($name: String!, $code: String!, $level: Int!){
-            createTypeCodeElement(name: $name, code: $code, level: $level) {
-                name
-                code
-                level
+        mutation ($name: String!, $code: String!, $level: Int!, $parentPath: String){
+            createTypeCodeElement(name: $name, code: $code, level: $level, parentPath: $parentPath) {
+                id
             }
         }
     """
-    variables = {"name": "test", "code": "test", "level": 1}
+    variables = {"name": "test", "code": "test", "level": 1, "parentPath": "/"}
     data = await get_response(client, query, variables=variables)
 
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
-                name
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 code
+                name
+                parentPath
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 1
-    assert data["typeCodeElements"][0] == {
-        "name": "test",
-        "code": "test",
-        "level": 1,
-    }
+    assert data["typeCodeElements"][0] == {"name": "test", "code": "test", "level": 1, "parentPath": "/"}
 
 
 @pytest.mark.asyncio
 async def test_update_type_code_elements(client: AsyncClient, is_admin_mock, get_response: Callable):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
-                code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 0
@@ -120,33 +114,32 @@ async def test_update_type_code_elements(client: AsyncClient, is_admin_mock, get
     variables = {"name": "test", "code": "test", "level": 1}
     data = await get_response(client, query, variables=variables)
     query = """
-        mutation ($id: String!, $name: String!){
-            updateTypeCodeElement(id: $id, name: $name) {
+        mutation ($id: String!, $name: String!, $code: String!){
+            updateTypeCodeElement(id: $id, name: $name, code: $code) {
                 name
-                code
                 level
             }
         }
     """
-    variables = {"id": data["createTypeCodeElement"]["id"], "name": "test2"}
+    variables = {"id": data["createTypeCodeElement"]["id"], "name": "test2", "code": "code2"}
     data = await get_response(client, query, variables=variables)
 
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
                 code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 1
     assert data["typeCodeElements"][0] == {
         "name": "test2",
-        "code": "test",
+        "code": "code2",
         "level": 1,
     }
 
@@ -154,15 +147,14 @@ async def test_update_type_code_elements(client: AsyncClient, is_admin_mock, get
 @pytest.mark.asyncio
 async def test_delete_type_code_elements(client: AsyncClient, is_admin_mock, get_response: Callable):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
-                code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 0
@@ -186,15 +178,14 @@ async def test_delete_type_code_elements(client: AsyncClient, is_admin_mock, get
     data = await get_response(client, query, variables=variables)
 
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
-                code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 0
@@ -205,26 +196,21 @@ async def test_add_type_code_elements_from_source(
     client: AsyncClient, is_admin_mock, datafix_dir, get_response: Callable
 ):
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
                 name
-                code
                 level
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["typeCodeElements"]) == 0
 
     query = """
         mutation ($file: String!){
-            createTypeCodeElementFromSource(file: $file) {
-                name
-                code
-                level
-            }
+            createTypeCodeElementFromSource(file: $file)
         }
     """
     with open(datafix_dir / "type_code_elements.csv", "rb") as file:
@@ -234,20 +220,25 @@ async def test_add_type_code_elements_from_source(
     data = await get_response(client, query, variables=variables)
 
     query = """
-        query ($id: String, $name: String, $code: String){
-            typeCodeElements(id: $id, name: $name, code: $code) {
-                name
+        query ($id: String, $name: String){
+            typeCodeElements(id: $id, name: $name) {
+                id
                 code
+                name
                 level
+                parentPath
             }
         }
     """
-    variables = {"id": None, "name": None, "code": None}
+    variables = {"id": None, "name": None}
 
     data = await get_response(client, query, variables=variables)
-    assert len(data["typeCodeElements"]) == 2
-    assert data["typeCodeElements"][0] == {
-        "name": "Bygningsbasis",
-        "code": "1",
-        "level": 1,
+
+    assert len(data["typeCodeElements"]) == 3
+    assert data["typeCodeElements"][1] == {
+        "name": "Terrn",
+        "code": "10",
+        "level": 2,
+        "parentPath": f'/{data["typeCodeElements"][0]["id"]}',
+        "id": data["typeCodeElements"][1]["id"],
     }
