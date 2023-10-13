@@ -40,7 +40,7 @@ async def query_project_for_export(project_id: str, token: str) -> dict | None:
 async def query_assemblies_for_export(project_id: str, token: str) -> dict | None:
     query = """
         query($projectId: String!) {
-            assemblies(projectId: $projectId) {
+            projectAssemblies(projectId: $projectId) {
                 id
                 name
                 lifeTime
@@ -98,4 +98,4 @@ async def query_assemblies_for_export(project_id: str, token: str) -> dict | Non
         data = response.json()
         if response.is_error or data.get("errors"):
             return None
-        return data.get("data").get("assemblies")
+        return data.get("data").get("projectAssemblies")
