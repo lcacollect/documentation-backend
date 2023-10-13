@@ -60,20 +60,23 @@ async def add_schema_template_mutation(
 
     if type_codes:
         type_code_ids = [type_code.id for type_code in type_codes]
+        type_code_path_map = {}
         for type_code in type_codes:
             schema_category = ""
             if getattr(type_code, "parent_path", "/") == "/":
                 schema_category = models_category.SchemaCategory(
                     name=type_code.name, path="/", reporting_schema=reporting_schema
                 )
+                type_code_path_map["/"] = schema_category
             else:
                 parent_codes = list(filter(None, type_code.parent_path.split("/")))
                 if all(parent_code in type_code_ids for parent_code in parent_codes):
                     schema_category = models_category.SchemaCategory(
                         name=type_code.name,
-                        path=type_code.parent_path,
+                        path=construct_parent_path(type_code.parent_path, type_code_path_map),
                         reporting_schema=reporting_schema,
                     )
+                    type_code_path_map[type_code.parent_path] = schema_category
             if schema_category:
                 session.add(schema_category)
 
@@ -89,6 +92,14 @@ async def add_schema_template_mutation(
     schema_template = (await session.exec(query)).first()
 
     return schema_template
+
+
+def construct_parent_path(path: str, type_code_path_map: dict[str, models_category.SchemaCategory]) -> str:
+    parent_path = "/" if len(path.split("/")) == 2 else "/".join(path.split("/")[:-1])
+    parent_category = type_code_path_map.get(parent_path)
+    if parent_category.path == "/":
+        return parent_category.path + parent_category.id
+    return parent_category.path + "/" + parent_category.id
 
 
 async def update_schema_template_mutation(

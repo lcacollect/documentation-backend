@@ -175,7 +175,7 @@ async def update_reporting_schema_mutation(
 ) -> GraphQLReportingSchema:
     """Update a Reporting Schema"""
 
-    session = info.context.get("session")
+    session = get_session(info)
     reporting_schema = await session.get(models_schema.ReportingSchema, id)
     if not reporting_schema:
         raise DatabaseItemNotFound(f"Could not find Reporting Schema with id: {id}")

@@ -89,6 +89,7 @@ async def test_create_template(client: AsyncClient, get_response: Callable, is_a
                 schemas {
                     name
                     categories {
+                        id
                         name
                         path
                         depth
@@ -100,20 +101,28 @@ async def test_create_template(client: AsyncClient, get_response: Callable, is_a
 
     data = await get_response(client, query)
     assert len(data["schemaTemplates"]) == 1
-    assert data["schemaTemplates"] == [
-        {
-            "name": "Schema Template 0",
-            "schemas": [
-                {
-                    "name": "Schema Template 0",
-                    "categories": [
-                        {"name": "name", "path": "/", "depth": 0},
-                        {"name": "name2", "path": "/test", "depth": 1},
-                    ],
-                }
-            ],
-        }
-    ]
+    assert data["schemaTemplates"][0] == {
+        "name": "Schema Template 0",
+        "schemas": [
+            {
+                "name": "Schema Template 0",
+                "categories": [
+                    {
+                        "id": data["schemaTemplates"][0].get("schemas")[0].get("categories")[0].get("id"),
+                        "name": "name",
+                        "path": "/",
+                        "depth": 0,
+                    },
+                    {
+                        "id": data["schemaTemplates"][0].get("schemas")[0].get("categories")[1].get("id"),
+                        "name": "name2",
+                        "path": f'/{data["schemaTemplates"][0].get("schemas")[0].get("categories")[0].get("id")}',
+                        "depth": 1,
+                    },
+                ],
+            }
+        ],
+    }
 
 
 @pytest.mark.asyncio
