@@ -29,7 +29,7 @@ class Query:
         description=getdoc(schema_source.project_sources_query),
     )
     schema_templates: list[schema_template.GraphQLSchemaTemplate] = strawberry.field(
-        permission_classes=[IsAdmin],
+        permission_classes=[IsAuthenticated],
         resolver=schema_template.query_schema_templates,
         description=getdoc(schema_template.query_schema_templates),
     )
