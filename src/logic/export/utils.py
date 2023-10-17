@@ -91,14 +91,16 @@ async def query_assemblies_for_export(project_id: str, token: str) -> dict | Non
     async with httpx.AsyncClient(
         headers={"authorization": f"Bearer {token}"},
     ) as client:
-        response = await client.post(
-            f"{settings.ROUTER_URL}/graphql",
-            json={
-                "query": query,
-                "variables": {"projectId": project_id},
-            },
-        )
-
+        try:
+            response = await client.post(
+                f"{settings.ROUTER_URL}/graphql",
+                json={
+                    "query": query,
+                    "variables": {"projectId": project_id},
+                },
+            )
+        except Exception as e:
+            print(e)
         data = response.json()
         if response.is_error or data.get("errors"):
             raise MicroServiceResponseError(data.get("errors"))
