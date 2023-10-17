@@ -1,5 +1,6 @@
 import httpx
 from aiocache import cached
+from lcacollect_config.exceptions import MicroServiceResponseError
 
 from core.config import settings
 
@@ -53,9 +54,12 @@ async def query_assemblies_for_export(project_id: str, token: str) -> dict | Non
                     description
                     conversionFactor
                     referenceServiceLife
-                    transportType
+                    transportEpd {
+                        id
+                        name
+                    }
                     transportDistance
-                    transportUnit
+                    transportConversionFactor
                     epd {
                         id
                         name
@@ -97,5 +101,5 @@ async def query_assemblies_for_export(project_id: str, token: str) -> dict | Non
 
         data = response.json()
         if response.is_error or data.get("errors"):
-            return None
+            raise MicroServiceResponseError(data.get("errors"))
         return data.get("data").get("projectAssemblies")
