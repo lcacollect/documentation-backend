@@ -4,8 +4,10 @@ from typing import TYPE_CHECKING, Annotated, Optional, Union
 
 import strawberry
 from lcacollect_config.context import get_session, get_user
+from lcacollect_config.email import EmailType, send_email
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
+from lcacollect_config.user import get_users_from_azure
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info
@@ -88,7 +90,7 @@ class GraphQLTask:
         else:
             schema_element = await session.get(models_category.SchemaElement, self.element_id)
             return GraphQLSchemaElement(
-                **schema_element.dict(exclude={"schema_category_id", "source_id"}),
+                **schema_element.dict(exclude={"schema_category_id", "source_id", "meta_fields"}),
                 schema_category=None,
                 source=None,
                 commits=[],
@@ -150,10 +152,16 @@ async def add_task_mutation(
     if not schema_part:
         raise DatabaseItemNotFound(f"{item.task_type} with id: {item.task_id} was not found")
 
+    assignee_email = ""
     if assignee.type == AssigneeType.PROJECT_MEMBER:
         for member in members:
             if assignee.id == member.id:
                 assignee.id = member.user_id
+                assignee_email = member.email
+        if not assignee_email:
+            users = await get_users_from_azure(assignee.id)
+            if len(users):
+                assignee_email = users[0].get("email")
 
     if assignee.type == AssigneeType.PROJECT_GROUP:
         await authenticate_group(info, group_id=assignee.id, project_id=reporting_schema.project_id)
@@ -203,6 +211,13 @@ async def add_task_mutation(
     session.add(task)
 
     await session.commit()
+
+    # send email notification
+    if assignee_email:
+        info.context["background_tasks"].add_task(
+            send_email, assignee_email, EmailType.TASK_ASSIGN, **{"task": task.name}
+        )
+
     await session.refresh(commit)
     await session.refresh(task)
     query = select(models_task.Task).where(models_task.Task.reporting_schema == reporting_schema)
@@ -267,10 +282,16 @@ async def update_task_mutation(
     else:
         schema_part = None
 
+    assignee_email = ""
     if assignee.type == AssigneeType.PROJECT_MEMBER:
         for member in members:
             if assignee.id == member.id:
                 assignee.id = member.user_id
+                assignee_email = member.email
+        if not assignee_email:
+            users = await get_users_from_azure(assignee.id)
+            if len(users):
+                assignee_email = users[0].get("email")
 
     if assigned_group_id:
         await authenticate_group(info, group_id=assigned_group_id, project_id=reporting_schema.project_id)
@@ -288,9 +309,17 @@ async def update_task_mutation(
         "assigned_group_id": assignee.id if assignee and assignee.type == AssigneeType.PROJECT_GROUP else None,
     }
 
+    email_type = ""
+    email_kwargs = {}
     for key, value in kwargs.items():
         if value:
             setattr(task, key, value)
+            if key == "status":
+                email_type = EmailType.TASK_STATUS_CHANGE
+                email_kwargs = {"task": task.name, "status": task.status}
+            if key == "assignee_id":
+                email_type = EmailType.TASK_ASSIGN
+                email_kwargs = {"task": task.name}
 
     commit.tasks.append(task)
     session.add(commit)
@@ -299,6 +328,10 @@ async def update_task_mutation(
     await session.commit()
     await session.refresh(commit)
     await session.refresh(task)
+
+    # send email notification
+    if email_type and assignee_email:
+        info.context["background_tasks"].add_task(send_email, assignee_email, email_type, **email_kwargs)
 
     query = select(models_task.Task).where(models_task.Task.id == task.id)
     query = await graphql_options(info, query)

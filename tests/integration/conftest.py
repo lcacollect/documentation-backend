@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import json
 
 import pytest
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -15,6 +16,7 @@ from models.schema_template import SchemaTemplate
 from models.source import ProjectSource
 from models.tag import Tag
 from models.task import Task
+from models.typecode import TypeCodeElement
 
 
 @pytest.fixture
@@ -42,11 +44,11 @@ async def schema_templates(db) -> list[SchemaTemplate]:
 
 
 @pytest.fixture
-async def reporting_schemas(db) -> list[ReportingSchema]:
+async def reporting_schemas(db, project_id) -> list[ReportingSchema]:
     schemas = []
     async with AsyncSession(db) as session:
         for i in range(4):
-            schema = ReportingSchema(name=f"Reporting Schema {i}", project_id=f"{i}")
+            schema = ReportingSchema(name=f"Reporting Schema {i}", project_id=project_id)
             session.add(schema)
             schemas.append(schema)
         await session.commit()
@@ -90,12 +92,10 @@ async def schema_categories(db, reporting_schemas) -> list[SchemaCategory]:
 
 
 @pytest.fixture
-async def project_sources(db) -> list[ProjectSource]:
+async def project_sources(db, project_id) -> list[ProjectSource]:
     sources = []
     csv_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a0"
     csv_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
-    xlsx_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a1"
-    xlsx_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
 
     async with AsyncSession(db) as session:
         for i in range(4):
@@ -103,7 +103,7 @@ async def project_sources(db) -> list[ProjectSource]:
                 type="SPECKLE" if i < 3 else "csv",
                 data_id="21b253d478" if i < 3 else csv_data_id,
                 name=f"Source {i}",
-                project_id=f"{i}",
+                project_id=project_id,
                 meta_fields=dict(speckle_url="speckle.arkitema.com"),
                 interpretation={
                     "name": "family",
@@ -120,11 +120,24 @@ async def project_sources(db) -> list[ProjectSource]:
             session.add(source)
             sources.append(source)
 
+        await session.commit()
+        [await session.refresh(source) for source in sources]
+
+    yield sources
+
+
+@pytest.fixture
+async def xlsx_source(db, project_id) -> list[ProjectSource]:
+    sources = []
+    xlsx_data_id = "test/39/92/3ce5233dbf3400bb9905fdec8fd2355ab15b1ef242b2ef1d2756192d64a1"
+    xlsx_interpretation = {"interpretationName": "name", "description": "description", "m2": "area"}
+
+    async with AsyncSession(db) as session:
         xlsx_source = ProjectSource(
             type="xlsx",
             data_id=xlsx_data_id,
-            name=f"Source 5",
-            project_id="5",
+            name=f"Source 0",
+            project_id=project_id,
             meta_fields=dict(speckle_url="speckle.arkitema.com"),
             interpretation=xlsx_interpretation,
             author_id="some_user",
@@ -246,6 +259,21 @@ async def comments(db, tasks) -> list[Comment]:
 
 
 @pytest.fixture
+async def type_code_elements(db) -> list[Task]:
+    type_code_elements = []
+    async with AsyncSession(db) as session:
+        for i in range(4):
+            type_code_element = TypeCodeElement(
+                name=f"Name {i}", code=f"Code {i}", level=i, parent_path=f"/Code {i-1}" if i != 0 else "/"
+            )
+            session.add(type_code_element)
+            type_code_elements.append(type_code_element)
+        await session.commit()
+        [await session.refresh(type_code_elem) for type_code_elem in type_code_elements]
+    yield type_code_elements
+
+
+@pytest.fixture
 def csv_file(datafix_dir):
     yield open(datafix_dir / "project_source.csv", "rb")
 
@@ -253,6 +281,11 @@ def csv_file(datafix_dir):
 @pytest.fixture
 def project_exists_mock(mocker):
     mocker.patch("lcacollect_config.validate.project_exists", return_value=True)
+
+
+@pytest.fixture
+def is_admin_mock(mocker):
+    mocker.patch("core.permissions.IsAdmin.has_permission", return_value=True)
 
 
 @pytest.fixture
@@ -268,6 +301,39 @@ def group_exists_mock(mocker):
 @pytest.fixture
 def group_doesnt_exist_mock(mocker):
     mocker.patch("lcacollect_config.validate.group_exists", return_value=False)
+
+
+@pytest.fixture
+def query_project_for_export_mock(httpx_mock, datafix_dir, reporting_schemas):
+    project_mock = json.loads((datafix_dir / "project_export.json").read_text())
+    project_id = reporting_schemas[0].project_id
+    query = (
+        b'{"query": "\\n        query($id: String!) {\\n            projects(filters: {id: {equal: $id}}) {\\n                id\\n                name\\n                country\\n                stages {\\n                    phase\\n                }\\n            }\\n        }\\n    ", "variables": {"id": "'
+        + project_id.encode()
+        + b'"}}'
+    )
+    httpx_mock.add_response(url=f"{settings.ROUTER_URL}/graphql", json=project_mock, match_content=query)
+    yield
+    httpx_mock.reset(assert_all_responses_were_requested=True)
+
+
+@pytest.fixture
+def query_assemblies_for_export_mock(httpx_mock, datafix_dir, reporting_schemas):
+    assembly_mock = json.loads((datafix_dir / "assembly_export.json").read_text())
+    project_id = reporting_schemas[0].project_id
+    query = (
+        b'{"query": "\\n        query($projectId: String!) {\\n            projectAssemblies(projectId: $projectId) {\\n                id\\n                name\\n                lifeTime\\n                unit\\n                conversionFactor\\n                description\\n                layers {\\n                    id\\n                    name\\n                    description\\n                    conversionFactor\\n                    referenceServiceLife\\n                    transportEpd {\\n                        id\\n                        name\\n                    }\\n                    transportDistance\\n                    transportConversionFactor\\n                    epd {\\n                        id\\n                        name\\n                        declaredUnit\\n                        version\\n                        validUntil\\n                        publishedDate\\n                        source\\n                        location\\n                        subtype\\n                        referenceServiceLife\\n                        comment\\n                        conversions {\\n                            to\\n                            value\\n                        }\\n                        gwp {\\n                            a1a3\\n                            c3\\n                            c4\\n                            d\\n                        }\\n                    }\\n                }\\n            }\\n        }\\n    ", "variables": {"projectId": "'
+        + project_id.encode()
+        + b'"}}'
+    )
+    httpx_mock.add_response(
+        url=f"{settings.ROUTER_URL}/graphql",
+        json=assembly_mock,
+        match_content=query,
+    )
+
+    yield
+    httpx_mock.reset(assert_all_responses_were_requested=False)
 
 
 @pytest.fixture
@@ -330,22 +396,6 @@ def blob_client_mock_async(mocker, datafix_dir):
     mocker.patch("azure.storage.blob.aio.BlobClient.__aexit__", return_value=None)
 
 
-# @pytest.fixture
-# def upload_blob_mock(mocker):
-#     mocker.patch("azure.storage.blob.aio.BlobClient.upload_blob", return_value=asyncio.Future())
-#
-#
-# @pytest.fixture
-# def download_blob_mock(mocker, datafix_dir):
-#     data = (datafix_dir / "source_data.csv").read_bytes()
-#
-#     class MockObject:
-#         def readall(self):
-#             return data
-#
-#     mocker.patch("azure.storage.blob.BlobClient.download_blob", return_value=MockObject())
-
-
 @pytest.fixture
 async def member_mock(httpx_mock):
     httpx_mock.add_response(
@@ -366,4 +416,19 @@ async def member_mock(httpx_mock):
                 ]
             }
         },
+    )
+
+
+@pytest.fixture
+async def project_exists_mock(httpx_mock, datafix_dir, project_id):
+    project_mock = json.loads((datafix_dir / "project_exists.json").read_text())
+    content = (
+        b'{"query": "\\n        query($id: String!) {\\n            projects(filters: {id: {equal: $id}}) {\\n                id\\n                public\\n            }\\n        }\\n    ", "variables": {"id": "'
+        + project_id.encode()
+        + b'"}}'
+    )
+    httpx_mock.add_response(
+        url=f"{settings.ROUTER_URL}/graphql",
+        json=project_mock,
+        match_content=content,
     )

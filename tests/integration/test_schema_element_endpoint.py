@@ -12,7 +12,9 @@ from schema.schema_element import Unit
 
 
 @pytest.mark.asyncio
-async def test_get_schema_elements(client: AsyncClient, schema_elements, member_mocker, get_response: Callable):
+async def test_get_schema_elements(
+    client: AsyncClient, schema_elements, project_exists_mock, member_mocker, get_response: Callable
+):
     query = """
         query getElements($schemaCategoryIds: [String!]!, $commitId: String = null){
             schemaElements(schemaCategoryIds: $schemaCategoryIds, commitId: $commitId) {
@@ -44,7 +46,7 @@ async def test_get_schema_elements(client: AsyncClient, schema_elements, member_
 
 @pytest.mark.asyncio
 async def test_get_schema_elements_with_filters(
-    client: AsyncClient, schema_elements, member_mocker, get_response: Callable
+    client: AsyncClient, schema_elements, project_exists_mock, member_mocker, get_response: Callable
 ):
     query = """
         query getElements($schemaCategoryIds: [String!]!, $commitId: String = null){
@@ -75,8 +77,8 @@ async def test_create_schema_element_from_source(
     get_response: Callable,
 ):
     mutation = """
-        mutation addElement($schemaCategoryId: String!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
-            addSchemaElementFromSource(schemaCategoryId: $schemaCategoryId, sourceId: $sourceId, objectIds: $objectIds, units: $units, quantities: $quantities){
+        mutation addElement($schemaCategoryIds: [String!]!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
+            addSchemaElementFromSource(schemaCategoryIds: $schemaCategoryIds, sourceId: $sourceId, objectIds: $objectIds, units: $units, quantities: $quantities){
                 name
                 unit
                 description
@@ -97,7 +99,7 @@ async def test_create_schema_element_from_source(
         source = (await session.exec(select(ProjectSource).where(ProjectSource.type == "csv"))).first()
 
     variables = {
-        "schemaCategoryId": schema_categories[0].id,
+        "schemaCategoryIds": [schema_categories[0].id, schema_categories[0].id],
         "sourceId": source.id,
         "objectIds": ["0", "2"],
         "units": [Unit.M2.name, Unit.M3.name],
@@ -121,14 +123,14 @@ async def test_create_schema_element_from_source_xlsx(
     db,
     commits,
     schema_categories,
-    project_sources,
+    xlsx_source,
     member_mocker,
     blob_client_mock_xlsx,
     get_response: Callable,
 ):
     mutation = """
-        mutation addElement($schemaCategoryId: String!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
-            addSchemaElementFromSource(schemaCategoryId: $schemaCategoryId, sourceId: $sourceId, objectIds: $objectIds, units: $units, quantities: $quantities){
+        mutation addElement($schemaCategoryIds: [String!]!, $sourceId: String!, $objectIds: [String!]!, $units: [Unit!], $quantities: [Float!]){
+            addSchemaElementFromSource(schemaCategoryIds: $schemaCategoryIds, sourceId: $sourceId, objectIds: $objectIds, units: $units, quantities: $quantities){
                 name
                 unit
                 description
@@ -149,7 +151,7 @@ async def test_create_schema_element_from_source_xlsx(
         source = (await session.exec(select(ProjectSource).where(ProjectSource.type == "xlsx"))).first()
 
     variables = {
-        "schemaCategoryId": schema_categories[0].id,
+        "schemaCategoryIds": [schema_categories[0].id, schema_categories[0].id],
         "sourceId": source.id,
         "objectIds": ["0", "2"],
         "units": [Unit.M2.name, Unit.M3.name],
@@ -180,7 +182,7 @@ async def test_create_schema_element(
 ):
     mutation = """
         mutation addElement($schemaCategoryId: String!) {
-            addSchemaElement(name: "Schema Element 0", schemaCategoryId: $schemaCategoryId, unit: M2, quantity: 1, description: "" ) {
+            addSchemaElement(name: "Schema Element 0", schemaCategoryId: $schemaCategoryId, unit: M2, quantity: 1, description: "", assemblyId: "assembly-Id" ) {
                 name
                 schemaCategory {
                     id
@@ -188,6 +190,7 @@ async def test_create_schema_element(
                 quantity
                 unit
                 description
+                assemblyId
             }
         }
     """
@@ -205,6 +208,7 @@ async def test_create_schema_element(
         "quantity": 1.0,
         "unit": Unit.M2.name,
         "description": "",
+        "assemblyId": "assembly-Id",
     }
     async with AsyncSession(db) as session:
         query = select(Commit)
@@ -226,21 +230,25 @@ async def test_update_schema_element(
     get_response: Callable,
 ):
     mutation = """
-        mutation updateElement($id: String! $quantity: Float!, $unit: Unit!, $description: String!) {
-            updateSchemaElement(id: $id, quantity: $quantity, unit: $unit, description: $description) {
+        mutation updateElements($elements: [SchemaElementUpdateInput!]!){
+            updateSchemaElements(schemaElements: $elements) {
                 id
                 quantity
                 unit
                 name
                 description
+                assemblyId
             }
         }
     """
     variables = {
-        "id": schema_elements[1].id,
-        "description": "Description 1",
-        "quantity": 1.0,
-        "unit": Unit.M3.name,
+        "elements": {
+            "id": schema_elements[1].id,
+            "description": "Description 1",
+            "quantity": 1.0,
+            "unit": Unit.M3.name,
+            "assemblyId": "assembly-Id",
+        }
     }
 
     async with AsyncSession(db) as session:
@@ -249,13 +257,16 @@ async def test_update_schema_element(
         commits_before = commits_before.all()
 
     data = await get_response(client, mutation, variables=variables)
-    assert data["updateSchemaElement"] == {
-        "name": "Schema Element 1",
-        "id": schema_elements[1].id,
-        "description": "Description 1",
-        "quantity": 1.0,
-        "unit": Unit.M3.name,
-    }
+    assert data["updateSchemaElements"] == [
+        {
+            "name": "Schema Element 1",
+            "id": schema_elements[1].id,
+            "description": "Description 1",
+            "quantity": 1.0,
+            "unit": Unit.M3.name,
+            "assemblyId": "assembly-Id",
+        }
+    ]
 
     async with AsyncSession(db) as session:
         query = select(Commit)

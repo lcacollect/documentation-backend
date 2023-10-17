@@ -6,9 +6,6 @@ from fastapi import HTTPException
 from lcacollect_config.context import get_session, get_user
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
-from specklepy.api import operations
-from specklepy.api.client import SpeckleClient
-from specklepy.transports.server import ServerTransport
 from sqlalchemy.orm import selectinload
 from sqlmodel import col, select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -50,9 +47,9 @@ class Unit(Enum):
     NONE = None
 
 
-@strawberry.type
+@strawberry.federation.type(keys=["id"])
 class GraphQLSchemaElement:
-    id: str
+    id: strawberry.ID
     name: str
     quantity: float
     unit: Unit
@@ -60,12 +57,14 @@ class GraphQLSchemaElement:
     schema_category: Annotated["GraphQLSchemaCategory", strawberry.lazy("schema.schema_category")]
     commits: list[Annotated["GraphQLCommit", strawberry.lazy("schema.commit")]]
     source: Annotated["GraphQLProjectSource", strawberry.lazy("schema.source")] | None
+    assembly_id: str | None = strawberry.federation.field(shareable=True)
     result: JSON | None
 
 
 async def query_schema_elements(
     info: Info,
     schema_category_ids: list[str],
+    element_id: Optional[str] = None,
     commit_id: Optional[str] = None,
     filters: Optional[SchemaElementFilters] = None,
 ) -> list[GraphQLSchemaElement]:
@@ -79,10 +78,14 @@ async def query_schema_elements(
             .options(selectinload(models_category.SchemaCategory.reporting_schema))
         )
     ).first()
-    await authenticate(info, schema_category.reporting_schema.project_id)
+
+    if schema_category:
+        await authenticate(info, schema_category.reporting_schema.project_id, check_public=True)
 
     if commit_id:
         query = select(models_element.SchemaElement).where(models_element.ElementCommitLink.commit_id == commit_id)
+    elif element_id:
+        query = select(models_element.SchemaElement).where(models_element.SchemaElement.id == element_id)
     else:
         query = select(models_element.SchemaElement).where(
             col(models_element.SchemaElement.schema_category_id).in_(schema_category_ids)
@@ -104,6 +107,7 @@ async def add_schema_element_mutation(
     quantity: float,
     unit: Unit,
     description: str,
+    assembly_id: Optional[str] = None,
 ) -> GraphQLSchemaElement:
     """Add a Schema Element to a Schema Category"""
 
@@ -117,6 +121,7 @@ async def add_schema_element_mutation(
         description=description,
         schema_category=schema_category,
         schema_category_id=schema_category_id,
+        assembly_id=assembly_id,
     )
 
     # adds the schema element to the commit
@@ -137,37 +142,68 @@ async def add_schema_element_mutation(
     return schema_element
 
 
-async def update_schema_element_mutation(
+@strawberry.input()
+class SchemaElementUpdateInput:
+    id: str
+    name: Optional[str] = None
+    schema_category: Optional[str] = None
+    quantity: Optional[float] = None
+    unit: Unit | None = None
+    description: Optional[str] = None
+    result: Optional[JSON] = None
+    assembly_id: Optional[str] = None
+
+
+async def update_schema_elements_mutation(
     info: Info,
-    id: str,
-    name: Optional[str] = None,
-    schema_category_id: Optional[str] = None,
-    quantity: Optional[float] = None,
-    unit: Unit | None = None,
-    description: Optional[str] = None,
-    result: Optional[JSON] = None,
-) -> GraphQLSchemaElement:
-    """Update a Schema Element"""
+    schema_elements: list[SchemaElementUpdateInput],
+) -> list[GraphQLSchemaElement]:
+    """Update Schema Elements"""
 
     session = info.context.get("session")
 
-    schema_element = await session.get(models_element.SchemaElement, id)
-
-    if not schema_element:
-        raise DatabaseItemNotFound(f"Could not find Schema Element with id: {id}")
-
+    schema_element = await session.get(models_element.SchemaElement, schema_elements[0].id)
     commit, schema_category, _ = await fetch_models(info, schema_element.schema_category_id)
     await authenticate(info, schema_category.reporting_schema.project_id)
+
+    schema_element_models = [
+        await update_schema_element_model(session, commit, schema_element_input)
+        for schema_element_input in schema_elements
+    ]
+
+    session.add(commit)
+
+    await session.commit()
+    await session.refresh(commit)
+    [await session.refresh(schema_element) for schema_element in schema_element_models]
+
+    query = select(models_element.SchemaElement).where(
+        col(models_element.SchemaElement.id).in_([schema_element.id for schema_element in schema_element_models])
+    )
+    query = await graphql_options(info, query)
+
+    _schema_elements = (await session.exec(query)).all()
+    return _schema_elements
+
+
+async def update_schema_element_model(
+    session: AsyncSession, commit: models_commit.Commit, schema_element_input: SchemaElementUpdateInput
+) -> models_element.SchemaElement:
+    schema_element = await session.get(models_element.SchemaElement, schema_element_input.id)
+
+    if not schema_element:
+        raise DatabaseItemNotFound(f"Could not find Schema Element with id: {schema_element_input.id}")
 
     commit.schema_elements.remove(schema_element)
 
     kwargs = {
-        "name": name,
-        "schema_category_id": schema_category_id,
-        "quantity": quantity,
-        "unit": unit.value if unit is not None else None,
-        "description": description,
-        "result": result,
+        "name": schema_element_input.name,
+        "schema_category_id": schema_element_input.schema_category,
+        "quantity": schema_element_input.quantity,
+        "unit": schema_element_input.unit.value if schema_element_input.unit is not None else None,
+        "description": schema_element_input.description,
+        "result": schema_element_input.result,
+        "assembly_id": schema_element_input.assembly_id,
     }
 
     for key, value in kwargs.items():
@@ -175,18 +211,8 @@ async def update_schema_element_mutation(
             setattr(schema_element, key, value)
 
     commit.schema_elements.append(schema_element)
-
-    session.add(commit)
     session.add(schema_element)
 
-    await session.commit()
-    await session.refresh(commit)
-    await session.refresh(schema_element)
-
-    query = select(models_element.SchemaElement).where(models_element.SchemaElement.id == id)
-    query = await graphql_options(info, query)
-
-    await session.exec(query)
     return schema_element
 
 
@@ -251,7 +277,7 @@ async def graphql_options(info, query, base_field: str = "schemaElements"):
 
 async def add_schema_element_from_source_mutation(
     info: Info,
-    schema_category_id: str,
+    schema_category_ids: list[str],
     source_id: str,
     object_ids: list[str],
     units: Optional[list[Unit]] = None,
@@ -259,14 +285,15 @@ async def add_schema_element_from_source_mutation(
 ):
     """Add a Schema Element to a Schema Category from with data from a Project Source"""
 
-    commit, schema_category, session = await fetch_models(info, schema_category_id)
+    commit, schema_category, session = await fetch_models(info, schema_category_ids[0])
     await authenticate(info, schema_category.reporting_schema.project_id)
     elements = []
     source = await session.get(models_source.ProjectSource, source_id)
     if source.type == schema_source.ProjectSourceType.SPECKLE.name:
-        elements = await speckle_to_elements(elements, object_ids, schema_category, schema_category_id, source)
+        raise NotImplementedError()
+        # elements = await speckle_to_elements(elements, object_ids, schema_category, schema_category_ids, source)
     elif source.type in (schema_source.ProjectSourceType.CSV.value, schema_source.ProjectSourceType.XLSX.value):
-        elements = await file_data_to_elements(schema_category_id, source, object_ids, quantities, units)
+        elements = await file_data_to_elements(schema_category_ids, source, object_ids, quantities, units)
     else:
         raise SourceElementCreationError(
             f"Can not add elements from source: {source.id} with source type: {source.type}"
@@ -373,7 +400,7 @@ async def speckle_to_elements(elements, object_ids, schema_category, schema_cate
 
 
 async def file_data_to_elements(
-    schema_category_id: str,
+    schema_category_ids: list[str],
     source: models_source.ProjectSource,
     objects_ids: list[str],
     quantities: list[float],
@@ -383,9 +410,13 @@ async def file_data_to_elements(
     interpretation = source.interpretation
     headers, file_data = source.data
 
-    if len(objects_ids) != len(quantities) or len(objects_ids) != len(units):
+    if (
+        len(objects_ids) != len(quantities)
+        or len(objects_ids) != len(units)
+        or len(objects_ids) != len(schema_category_ids)
+    ):
         raise SourceElementCreationError(
-            f"Number of object_ids: {len(objects_ids)} must match number of quantities: {len(quantities)} and units: {len(units)}"
+            f"Number of object_ids: {len(objects_ids)} must match number of quantities: {len(quantities)}, units: {len(units)} and schema_categories: {len(schema_category_ids)}"
         )
 
     for idx, object_id in enumerate(objects_ids):
@@ -405,7 +436,8 @@ async def file_data_to_elements(
                     quantity=quantities[idx] if quantities[idx] else 0,
                     unit=units[idx].value,
                     source_id=source.id,
-                    schema_category_id=schema_category_id,
+                    schema_category_id=schema_category_ids[idx],
+                    meta_fields={"source_object_index": interpretation.get("id", None)},
                 )
             )
         except KeyError as error:

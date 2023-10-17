@@ -11,7 +11,6 @@ from azure.storage.blob.aio import BlobClient
 from lcacollect_config.context import get_session, get_user
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
-from specklepy.api.client import SpeckleClient
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -86,8 +85,8 @@ async def project_sources_query(
 
     sources = (await session.exec(query)).all()
 
-    _ = await authenticate(info, project_id or sources[0].project_id)
     await authenticate_project(info, project_id or sources[0].project_id)
+    _ = await authenticate(info, project_id or sources[0].project_id, check_public=True)
 
     return sources
 
@@ -125,6 +124,20 @@ async def add_project_source_mutation(
 
     if file:
         project_source.data_id = await handle_file_upload(file, project_source)
+
+    default_interpretation = {
+        "KG": "kg",
+        "M": "m",
+        "M2": "m2",
+        "M3": "m3",
+        "PCS": "pcs",
+        "description": "Description",
+        "interpretationName": "Name",
+        "id": "Id",
+        "typeCode": "Type Code",
+    }
+
+    project_source.interpretation = default_interpretation
 
     session.add(project_source)
 
@@ -274,9 +287,9 @@ async def remove_members_from_stream(stream_id: str, speckle_url: str):
         client.stream.revoke_permission(stream_id=stream_id, user_id=collaborator.id)
 
 
-def get_speckle_client(speckle_url: str) -> SpeckleClient:
-    """Fetches the Speckle Client object"""
-
-    client = SpeckleClient(speckle_url)
-    client.authenticate_with_token(settings.SPECKLE_TOKEN)
-    return client
+# def get_speckle_client(speckle_url: str) -> SpeckleClient:
+#     """Fetches the Speckle Client object"""
+#
+#     client = SpeckleClient(speckle_url)
+#     client.authenticate_with_token(settings.SPECKLE_TOKEN)
+#     return client

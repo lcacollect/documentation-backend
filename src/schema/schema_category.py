@@ -24,7 +24,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 @strawberry.type
 class GraphQLSchemaCategory:
-    id: str
+    id: strawberry.ID
     name: str
     description: str | None
     reporting_schema_id: str | None
@@ -54,7 +54,7 @@ async def query_schema_categories(
 
     auth_query = select(models_schema.ReportingSchema).where(models_schema.ReportingSchema.id == reporting_schema_id)
     reporting_schema = (await session.exec(auth_query)).first()
-    await authenticate(info, reporting_schema.project_id)
+    await authenticate(info, reporting_schema.project_id, check_public=True)
 
     if commit_id:
         query = select(models_category.SchemaCategory).where(models_category.CategoryCommitLink.commit_id == commit_id)
