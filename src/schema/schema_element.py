@@ -42,23 +42,26 @@ class Unit(Enum):
     M = "m"
     M2 = "m2"
     M3 = "m3"
+    L = "l"
     KG = "kg"
     PCS = "pcs"
+    TONNES = "tonnes"
+    TONNES_KM = "t*km"
     NONE = None
 
 
 @strawberry.federation.type(keys=["id"])
 class GraphQLSchemaElement:
-    id: strawberry.ID
-    name: str
-    quantity: float
-    unit: Unit
-    description: str | None
+    id: strawberry.ID = strawberry.federation.field(shareable=True)
+    name: str = strawberry.federation.field(shareable=True)
+    quantity: float = strawberry.federation.field(shareable=True)
+    unit: Unit = strawberry.federation.field(shareable=True)
+    description: str | None = strawberry.federation.field(shareable=True)
     schema_category: Annotated["GraphQLSchemaCategory", strawberry.lazy("schema.schema_category")]
     commits: list[Annotated["GraphQLCommit", strawberry.lazy("schema.commit")]]
     source: Annotated["GraphQLProjectSource", strawberry.lazy("schema.source")] | None
     assembly_id: str | None = strawberry.federation.field(shareable=True)
-    result: JSON | None
+    result: JSON | None = strawberry.federation.field(shareable=True)
 
 
 async def query_schema_elements(

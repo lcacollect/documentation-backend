@@ -114,16 +114,16 @@ type GraphQLSchemaCategory {
 }
 
 type GraphQLSchemaElement @key(fields: "id") {
-  id: ID!
-  name: String!
-  quantity: Float!
-  unit: Unit!
-  description: String
+  id: ID! @shareable
+  name: String! @shareable
+  quantity: Float! @shareable
+  unit: Unit! @shareable
+  description: String @shareable
   schemaCategory: GraphQLSchemaCategory!
   commits: [GraphQLCommit!]!
   source: GraphQLProjectSource
   assemblyId: String @shareable
-  result: JSON
+  result: JSON @shareable
 }
 
 union GraphQLSchemaElementGraphQLSchemaCategory = GraphQLSchemaElement | GraphQLSchemaCategory
@@ -408,8 +408,11 @@ enum Unit {
   M
   M2
   M3
+  L
   KG
   PCS
+  TONNES
+  TONNES_KM
   NONE
 }
 
