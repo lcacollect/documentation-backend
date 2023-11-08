@@ -16,7 +16,7 @@ from models.schema_template import SchemaTemplate
 from models.source import ProjectSource
 from models.tag import Tag
 from models.task import Task
-from models.typecode import TypeCodeElement
+from models.typecode import TypeCode, TypeCodeElement
 
 
 @pytest.fixture
@@ -259,17 +259,34 @@ async def comments(db, tasks) -> list[Comment]:
 
 
 @pytest.fixture
-async def type_code_elements(db) -> list[Task]:
+async def type_code(db) -> TypeCode:
+    async with AsyncSession(db) as session:
+        type_code = TypeCode(name="Type Code 0")
+        session.add(type_code)
+        await session.commit()
+        await session.refresh(type_code)
+
+    yield type_code
+
+
+@pytest.fixture
+async def type_code_elements(db, type_code) -> list[TypeCodeElement]:
     type_code_elements = []
     async with AsyncSession(db) as session:
         for i in range(4):
             type_code_element = TypeCodeElement(
-                name=f"Name {i}", code=f"Code {i}", level=i, parent_path=f"/Code {i-1}" if i != 0 else "/"
+                name=f"Name {i}",
+                code=f"Code {i}",
+                level=i,
+                parent_path=f"/Code {i-1}" if i != 0 else "/",
+                typecode_id=type_code.id,
             )
             session.add(type_code_element)
             type_code_elements.append(type_code_element)
+
         await session.commit()
         [await session.refresh(type_code_elem) for type_code_elem in type_code_elements]
+
     yield type_code_elements
 
 

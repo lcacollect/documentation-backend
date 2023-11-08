@@ -6,10 +6,13 @@ import pandas as pd
 import strawberry
 from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
+from lcacollect_config.graphql.input_filters import filter_model_query
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from strawberry.types import Info
 
 import models.typecode as models_type_code
+from schema.inputs import TypeCodeElementFilters, TypeCodeFilters
 
 
 @strawberry.type
@@ -36,25 +39,45 @@ class GraphQLTypeCodeElement:
         return parent_code
 
 
+@strawberry.type
+class GraphQLTypeCode:
+    id: str
+    name: str
+    elements: list[GraphQLTypeCodeElement]
+
+
 async def query_type_code_elements(
-    info: Info, id: Optional[str] = None, name: Optional[str] = None, code: Optional[str] = None
+    info: Info, filters: TypeCodeElementFilters | None = None
 ) -> list[GraphQLTypeCodeElement]:
     """Get typeCodeElements"""
 
     session = get_session(info)
 
-    if id:
-        query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.id == id)
-    elif name:
-        query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.name == name)
-    elif code:
-        query = select(models_type_code.TypeCodeElement).where(models_type_code.TypeCodeElement.code == code)
-    else:
-        query = select(models_type_code.TypeCodeElement)
+    query = select(models_type_code.TypeCodeElement)
+    if filters:
+        query = filter_model_query(models_type_code.TypeCodeElement, filters, query=query)
 
     type_code_elements = await session.exec(query)
 
     return type_code_elements.all()
+
+
+async def query_type_codes(info: Info, filters: TypeCodeFilters | None = None) -> list[GraphQLTypeCode]:
+    """Get Type Codes"""
+
+    session = get_session(info)
+
+    query = select(models_type_code.TypeCode)
+
+    if filters:
+        query = filter_model_query(models_type_code.TypeCode, filters, query=query)
+    if category_field := [field for field in info.selected_fields if field.name == "typeCodes"]:
+        if [field for field in category_field[0].selections if field.name == "elements"]:
+            query = query.options(selectinload(models_type_code.TypeCode.elements))
+
+    type_codes = await session.exec(query)
+
+    return type_codes.all()
 
 
 async def create_type_code_element(
@@ -77,12 +100,12 @@ async def create_type_code_element(
     return type_code_element
 
 
-async def create_type_code_element_from_source(info: Info, file: str) -> str:
+async def create_type_code_element_from_source(info: Info, file: str, name: str) -> str:
     """Add a new typeCodeElement from csv file"""
     session = get_session(info)
     data = base64.b64decode(file).decode("utf-8")
 
-    def _add_type_code(dataf: pd.DataFrame, level: int, code_ids: dict[str, str]):
+    def _add_type_code(dataf: pd.DataFrame, level: int, code_ids: dict[str, str], type_code_id: str):
         for _index, row in dataf.iterrows():
             path = list(filter(None, row.get("parentPath", "/").split("/")))
             formatted_path = "/"
@@ -99,22 +122,26 @@ async def create_type_code_element_from_source(info: Info, file: str) -> str:
                 code=row.get("Code"),
                 level=row.get("Level"),
                 parent_path=formatted_path,
+                typecode_id=type_code_id,
             )
             code_ids.update({type_code_element.code: type_code_element.id})
             session.add(type_code_element)
+
+    type_code = models_type_code.TypeCode(name=name)
+    session.add(type_code)
 
     with io.StringIO(data) as csv_file:
         df = pd.read_csv(csv_file, sep=",")
         code_ids = {}
 
         df_level1 = df[df.get("Level") == 1]
-        _add_type_code(df_level1, 1, code_ids)
+        _add_type_code(df_level1, 1, code_ids, type_code.id)
 
         df_level2 = df[df.get("Level") == 2]
-        _add_type_code(df_level2, 2, code_ids)
+        _add_type_code(df_level2, 2, code_ids, type_code.id)
 
         df_level3 = df[df.get("Level") == 3]
-        _add_type_code(df_level3, 3, code_ids)
+        _add_type_code(df_level3, 3, code_ids, type_code.id)
 
     await session.commit()
 

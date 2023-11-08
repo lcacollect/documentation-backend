@@ -165,6 +165,12 @@ type GraphQLTask @key(fields: "id") {
   item: GraphQLSchemaElementGraphQLSchemaCategory!
 }
 
+type GraphQLTypeCode {
+  id: String!
+  name: String!
+  elements: [GraphQLTypeCodeElement!]!
+}
+
 type GraphQLTypeCodeElement {
   id: String!
   code: String!
@@ -275,7 +281,7 @@ type Mutation {
   deleteTag(id: String!): String!
 
   """Add a new typeCodeElement from csv file"""
-  createTypeCodeElementFromSource(file: String!): String!
+  createTypeCodeElementFromSource(file: String!, name: String!): String!
 
   """Add a new typeCodeElement"""
   createTypeCodeElement(name: String!, code: String!, level: Int!, parentPath: String! = "/"): GraphQLTypeCodeElement!
@@ -336,7 +342,10 @@ type Query {
   exportReportingSchema(reportingSchemaId: String!, exportFormat: exportFormat!): String!
 
   """Get typeCodeElements"""
-  typeCodeElements(id: String = null, name: String = null, code: String = null): [GraphQLTypeCodeElement!]!
+  typeCodeElements(filters: TypeCodeElementFilters = null): [GraphQLTypeCodeElement!]!
+
+  """Get Type Codes"""
+  typeCodes(filters: TypeCodeFilters = null): [GraphQLTypeCode!]!
 }
 
 input ReportingSchemaFilters {
@@ -402,6 +411,18 @@ enum TaskStatus {
   PENDING
   COMPLETED
   APPROVED
+}
+
+input TypeCodeElementFilters {
+  id: FilterOptions = null
+  name: FilterOptions = null
+  code: FilterOptions = null
+  level: FilterOptions = null
+}
+
+input TypeCodeFilters {
+  name: FilterOptions = null
+  id: FilterOptions = null
 }
 
 enum Unit {

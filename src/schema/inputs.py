@@ -116,3 +116,17 @@ class CommentFilters(BaseFilter):
     id: Optional[FilterOptions] = None
     added: Optional[FilterOptions] = None
     text: Optional[FilterOptions] = None
+
+
+@strawberry.input
+class TypeCodeFilters(BaseFilter):
+    name: Optional[FilterOptions] = None
+    id: Optional[FilterOptions] = None
+
+
+@strawberry.input
+class TypeCodeElementFilters(BaseFilter):
+    id: Optional[FilterOptions] = None
+    name: Optional[FilterOptions] = None
+    code: Optional[FilterOptions] = None
+    level: Optional[FilterOptions] = None

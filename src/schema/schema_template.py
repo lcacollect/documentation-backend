@@ -1,6 +1,7 @@
 from typing import Optional
 
 import strawberry
+from lcacollect_config.context import get_session
 from lcacollect_config.exceptions import DatabaseItemNotFound
 from lcacollect_config.graphql.input_filters import filter_model_query
 from sqlalchemy.orm import Query, selectinload
@@ -51,7 +52,9 @@ async def add_schema_template_mutation(
     info: Info, name: str, type_codes: Optional[list[GraphQLTypeCodeElementInput]] = None
 ) -> GraphQLSchemaTemplate:
     """Add a Schema Template"""
-    session = info.context.get("session")
+
+    session = get_session(info)
+
     schema_template = models_template.SchemaTemplate(name=name)
     session.add(schema_template)
 
@@ -67,7 +70,7 @@ async def add_schema_template_mutation(
                 schema_category = models_category.SchemaCategory(
                     name=type_code.name, path="/", reporting_schema=reporting_schema
                 )
-                type_code_path_map["/"] = schema_category
+                type_code_path_map[("/", type_code.id)] = schema_category
             else:
                 parent_codes = list(filter(None, type_code.parent_path.split("/")))
                 if all(parent_code in type_code_ids for parent_code in parent_codes):
@@ -76,7 +79,7 @@ async def add_schema_template_mutation(
                         path=construct_parent_path(type_code.parent_path, type_code_path_map),
                         reporting_schema=reporting_schema,
                     )
-                    type_code_path_map[type_code.parent_path] = schema_category
+                    type_code_path_map[(type_code.parent_path, type_code.id)] = schema_category
             if schema_category:
                 session.add(schema_category)
 
@@ -94,11 +97,14 @@ async def add_schema_template_mutation(
     return schema_template
 
 
-def construct_parent_path(path: str, type_code_path_map: dict[str, models_category.SchemaCategory]) -> str:
+def construct_parent_path(path: str, type_code_path_map: dict[tuple[str, str], models_category.SchemaCategory]) -> str:
     parent_path = "/" if len(path.split("/")) == 2 else "/".join(path.split("/")[:-1])
-    parent_category = type_code_path_map.get(parent_path)
+    parent_id = path.split("/")[-1]
+    parent_category = type_code_path_map.get((parent_path, parent_id))
+
     if parent_category.path == "/":
         return parent_category.path + parent_category.id
+
     return parent_category.path + "/" + parent_category.id
 
 

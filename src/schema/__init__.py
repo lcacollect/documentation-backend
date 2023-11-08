@@ -78,6 +78,11 @@ class Query:
         resolver=schema_typecode.query_type_code_elements,
         description=getdoc(schema_typecode.query_type_code_elements),
     )
+    type_codes: list[schema_typecode.GraphQLTypeCode] = strawberry.field(
+        permission_classes=[IsAdmin],
+        resolver=schema_typecode.query_type_codes,
+        description=getdoc(schema_typecode.query_type_codes),
+    )
 
 
 @strawberry.type
