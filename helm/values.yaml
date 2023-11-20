@@ -66,5 +66,8 @@ backend:
   emailNotificationFrom: no-reply@arkitema.com
   internalEmailDomains: "arkitema,cowi,cowicloud"
   defaultAdFQDN: cowi.onmicrosoft.com
-
-
+  azure:
+    postgresUser: ""
+    postgresHost: ""
+    postgresPort: ""
+    postgresPassword: ""
