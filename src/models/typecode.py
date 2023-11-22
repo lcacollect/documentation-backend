@@ -22,4 +22,6 @@ class TypeCode(SQLModel, table=True):
     project_id: str | None
 
     # Relationships
-    elements: list[TypeCodeElement] = Relationship(back_populates="typecode")
+    elements: list[TypeCodeElement] = Relationship(
+        back_populates="typecode", sa_relationship_kwargs={"cascade": "all,delete"}
+    )
