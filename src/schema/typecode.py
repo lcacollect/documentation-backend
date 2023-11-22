@@ -115,7 +115,7 @@ async def create_type_code_element_from_source(info: Info, file: str, name: str)
                 if level == 3:
                     formatted_path = f"/{code_ids[path[0]]}/{code_ids[path[1]]}"
             except (KeyError, IndexError):
-                return
+                continue
 
             type_code_element = models_type_code.TypeCodeElement(
                 name=row.get("Name"),
