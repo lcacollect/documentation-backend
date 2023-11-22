@@ -44,4 +44,4 @@ async def export_reporting_schema_mutation(info: Info, reporting_schema_id: str,
     else:
         raise NotImplementedError
 
-    return str(base64.b64encode(data.encode("utf-8")), "utf-8")
+    return str(base64.b64encode(data.encode("utf-8-sig")), "utf-8")
