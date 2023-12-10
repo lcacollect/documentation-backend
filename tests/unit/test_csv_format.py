@@ -1,9 +1,10 @@
+from unittest.mock import PropertyMock
+
 import pytest
 
-from unittest.mock import PropertyMock
+from logic.export.to_csv import generate_csv_schema
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
-from logic.export.to_csv import generate_csv_schema
 
 
 @pytest.mark.asyncio
