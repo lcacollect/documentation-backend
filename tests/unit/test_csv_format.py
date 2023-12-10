@@ -1,27 +1,26 @@
+from unittest.mock import PropertyMock
+
 import pytest
 
+from logic.export.to_csv import generate_csv_schema
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 
 
 @pytest.mark.asyncio
-async def test_csv_element(category: SchemaCategory):
+async def test_csv_element(category: SchemaCategory, mocker):
     """Test that SchemaElement is correctly written to CSV."""
-    element = category.elements[0]
-    attributes = (
-        "name",
-        "quantity",
-        "unit",
-        "description",
-        "result",
-        # "schema_category",    # FIXME: read name/id
-        # "commits",    # FIXME
-        # "tasks",      # FIXME
-        # "source",     # FIXME
-    )
-    # TODO: check what order of columns makes sense
-    row_contents = ";".join([str(getattr(element, attr)) or "-" for attr in attributes])
-    header = ";".join(attributes)
-    expected_csv = "\n".join([header, row_contents])
 
-    assert True  # FIXME
+    m = mocker.patch("models.schema_element.SchemaElement.source", new_callable=PropertyMock)
+    m.return_value = False
+
+    expected_csv = """\
+"class";"name";"source";"quantity";"unit";"description"
+"211 | Udvendige vægelementer";"Wall";"Typed in";2500.0;"m3";"A 5th century oak palisade wall."
+""".replace(
+        "\r\n", "\n"
+    )
+
+    generated_csv = generate_csv_schema([category]).replace("\r\n", "\n")
+
+    assert expected_csv == generated_csv

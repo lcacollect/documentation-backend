@@ -115,6 +115,11 @@ async def test_create_schema_element_from_source(
         "quantity",
         "source",
     }
+    src1 = data["addSchemaElementFromSource"][1]
+    del src1["schemaCategory"]
+    del src1["source"]
+
+    assert src1 == {"name": "Wall 3", "unit": "M3", "description": "my wall 3", "quantity": 456.789}
 
 
 @pytest.mark.asyncio
