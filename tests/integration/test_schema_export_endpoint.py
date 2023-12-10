@@ -119,7 +119,7 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
             )
         ]
     )
-    assert csv_rows[1].replace('"', '').rstrip() == expected_data
+    assert csv_rows[1].replace('"', "").rstrip() == expected_data
 
 
 @pytest.mark.asyncio
