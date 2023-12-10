@@ -102,9 +102,9 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
     data = response.json()
     assert isinstance(data["data"]["exportReportingSchema"], str)
     csv_rows = base64.b64decode(data["data"]["exportReportingSchema"])
-    csv_rows = csv_rows.decode("utf-8").split("\n")
+    csv_rows = csv_rows.decode("utf-8-sig").split("\n")
 
-    assert csv_rows[0] == "class;name;source;quantity;unit;description"
+    assert csv_rows[0].rstrip() == '"class";"name";"source";"quantity";"unit";"description"'.rstrip()
     element = schema_elements[0]
     expected_data = ";".join(
         [
@@ -119,7 +119,7 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
             )
         ]
     )
-    assert csv_rows[1] == expected_data
+    assert csv_rows[1].replace('"', '').rstrip() == expected_data
 
 
 @pytest.mark.asyncio
@@ -156,7 +156,7 @@ async def test_lcax_export(
     assert data.get("errors") is None
     assert isinstance(data["data"]["exportReportingSchema"], str)
 
-    lcax_data = base64.b64decode(data["data"]["exportReportingSchema"]).decode("utf-8")
+    lcax_data = base64.b64decode(data["data"]["exportReportingSchema"]).decode("utf-8-sig")
     assert lcax_data
 
     lcax_project = LCAxProject(**json.loads(lcax_data))
