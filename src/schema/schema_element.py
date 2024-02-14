@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Annotated, Optional, Union
 
@@ -22,6 +23,8 @@ import schema.source as schema_source
 from core.validate import authenticate
 from exceptions import SourceElementCreationError
 from schema.inputs import SchemaElementFilters
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
     from schema.commit import GraphQLCommit
@@ -197,7 +200,10 @@ async def update_schema_element_model(
     if not schema_element:
         raise DatabaseItemNotFound(f"Could not find Schema Element with id: {schema_element_input.id}")
 
-    commit.schema_elements.remove(schema_element)
+    try:
+        commit.schema_elements.remove(schema_element)
+    except ValueError:
+        logger.exception("No schema element in commit object")
 
     kwargs = {
         "name": schema_element_input.name,
@@ -241,8 +247,8 @@ async def delete_schema_element_mutation(info: Info, id: str) -> str:
 
     try:
         commit.schema_elements.remove(schema_element)
-    except ValueError as err:
-        pass
+    except ValueError:
+        logger.exception("No schema element in commit object")
     else:
         session.add(commit)
 
