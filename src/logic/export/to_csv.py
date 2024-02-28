@@ -36,6 +36,7 @@ def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -
             "{quantity}",
             "{unit}",
             "{description}",
+            "{result}",
         ]
     )
     # Generate the header row
@@ -52,6 +53,7 @@ def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -
                 "quantity": element.quantity,
                 "unit": element.unit,
                 "description": element.description,
+                "result": element.total_result if element.result else None,
             }
             row_list.append(format_.format(**values))
     csv_str = "\n".join(row_list)

@@ -213,7 +213,7 @@ async def delete_project_source_mutation(info: Info, id: str) -> str:
 
     session = info.context.get("session")
     source = await session.get(models_source.ProjectSource, id)
-    _ = await authenticate(info, source.project_id)
+    await authenticate(info, source.project_id)
     await session.delete(source)
     await session.commit()
     return id

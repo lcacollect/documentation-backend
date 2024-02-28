@@ -16,6 +16,7 @@ async def query_project_for_export(project_id: str, token: str) -> dict | None:
                 stages {
                     phase
                 }
+                metaFields
             }
         }
     """
