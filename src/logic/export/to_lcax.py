@@ -71,6 +71,7 @@ def generate_lcax_schema(
         life_cycle_stages=get_life_cycle_stages(project),
         life_span=50,
         location=project["country"] or "DK",
+        results=project.get("metaFields", {}).get("lcaResults"),
     )
 
     return lcax_project.json(by_alias=True)
@@ -112,6 +113,7 @@ def get_assemblies(
                 parts=get_parts(element, graphql_assemblies, project),
                 quantity=element.quantity,
                 unit=convert_to_lcax_unit(element.unit),
+                results=element.result,
             )
             assemblies[assembly.id] = assembly
 

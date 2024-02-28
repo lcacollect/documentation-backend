@@ -325,7 +325,7 @@ def query_project_for_export_mock(httpx_mock, datafix_dir, reporting_schemas):
     project_mock = json.loads((datafix_dir / "project_export.json").read_text())
     project_id = reporting_schemas[0].project_id
     query = (
-        b'{"query": "\\n        query($id: String!) {\\n            projects(filters: {id: {equal: $id}}) {\\n                id\\n                name\\n                country\\n                stages {\\n                    phase\\n                }\\n            }\\n        }\\n    ", "variables": {"id": "'
+        b'{"query": "\\n        query($id: String!) {\\n            projects(filters: {id: {equal: $id}}) {\\n                id\\n                name\\n                country\\n                stages {\\n                    phase\\n                }\\n                metaFields\\n            }\\n        }\\n    ", "variables": {"id": "'
         + project_id.encode()
         + b'"}}'
     )

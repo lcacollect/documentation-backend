@@ -104,7 +104,7 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
     csv_rows = base64.b64decode(data["data"]["exportReportingSchema"])
     csv_rows = csv_rows.decode("utf-8").split("\n")
 
-    assert csv_rows[0] == "class;name;source;quantity;unit;description"
+    assert csv_rows[0] == "class;name;source;quantity;unit;description;result"
     element = schema_elements[0]
     expected_data = ";".join(
         [
@@ -116,6 +116,7 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
                 element.quantity,
                 element.unit,
                 element.description,
+                element.result,
             )
         ]
     )
