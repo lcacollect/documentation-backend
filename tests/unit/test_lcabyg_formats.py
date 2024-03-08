@@ -21,9 +21,9 @@ async def test_lcabyg_category_node(category: SchemaCategory):
             "Element": {
                 "id": category.id,
                 "name": {
-                    "Danish": category.name,
-                    "English": category.name,
-                    "German": category.name,
+                    "Danish": category.type_code_element.name,
+                    "English": category.type_code_element.name,
+                    "German": category.type_code_element.name,
                 },
                 "active": True,
                 "comment": category.description,
@@ -66,7 +66,6 @@ async def test_lcabyg_element_to_construction_edge(category: SchemaCategory):
     element_node = ConstructionNode(category.elements[0])
     edge = create_edge(element_node, category_node)
     edge_dict = edge.as_dict()
-
     assert edge_dict == {
         "Edge": [
             {
@@ -88,7 +87,6 @@ async def test_lcabyg_category_to_construction_edge(category: SchemaCategory):
     element_node = ConstructionNode(category.elements[0])
     edge = create_edge(element_node)
     edge_dict = edge.as_dict()
-
     assert edge_dict == {
         "Edge": [
             {

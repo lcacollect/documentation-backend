@@ -84,7 +84,6 @@ async def test_create_schema_element_from_source(
                 description
                 schemaCategory {
                     id
-                    name
                 }
                 quantity
                 source {
@@ -136,7 +135,6 @@ async def test_create_schema_element_from_source_xlsx(
                 description
                 schemaCategory {
                     id
-                    name
                 }
                 quantity
                 source {

@@ -31,6 +31,7 @@ async def expected_entities(mock_uuid, db, schema_elements, schema_categories) -
     async with AsyncSession(db) as session:
         query = (
             select(SchemaCategory)
+            .options(selectinload(SchemaCategory.type_code_element))
             .options(selectinload(SchemaCategory.elements).options(selectinload(SchemaElement.schema_category)))
             .options(selectinload(SchemaCategory.reporting_schema))
         )
@@ -110,7 +111,7 @@ async def test_csv_export(client, db, reporting_schemas, schema_elements, schema
         [
             str(i)
             for i in (
-                schema_categories[0].name,
+                "Name 1",
                 element.name,
                 project_source.name,
                 element.quantity,

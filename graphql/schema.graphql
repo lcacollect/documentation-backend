@@ -103,14 +103,13 @@ type GraphQLReportingSchema {
 
 type GraphQLSchemaCategory {
   id: ID!
-  name: String!
   description: String
   reportingSchemaId: String
-  path: String!
   reportingSchema: GraphQLReportingSchema!
+  typeCodeElementId: String
+  typeCodeElement: GraphQLTypeCodeElement
   elements: [GraphQLSchemaElement!]
   commits: [GraphQLCommit!]
-  depth: Int!
 }
 
 type GraphQLSchemaElement @key(fields: "id") {
@@ -131,7 +130,8 @@ union GraphQLSchemaElementGraphQLSchemaCategory = GraphQLSchemaElement | GraphQL
 type GraphQLSchemaTemplate {
   id: String!
   name: String!
-  schemas: [GraphQLReportingSchema!]
+  original: GraphQLReportingSchema
+  domain: String
 }
 
 type GraphQLSourceFile {
@@ -181,10 +181,7 @@ type GraphQLTypeCodeElement {
 }
 
 input GraphQLTypeCodeElementInput {
-  id: String
-  name: String!
-  code: String!
-  level: Int
+  id: String!
   parentPath: String!
 }
 
@@ -195,10 +192,10 @@ scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/fi
 
 type Mutation {
   """Add a Schema Template"""
-  addSchemaTemplate(name: String!, typeCodes: [GraphQLTypeCodeElementInput!] = null): GraphQLSchemaTemplate!
+  addSchemaTemplate(name: String!, domain: String = null, typeCodes: [GraphQLTypeCodeElementInput!] = null): GraphQLSchemaTemplate!
 
   """Update a Schema Template"""
-  updateSchemaTemplate(id: String!, name: String = null, typeCodes: [GraphQLTypeCodeElementInput!] = null): GraphQLSchemaTemplate!
+  updateSchemaTemplate(id: String!, name: String = null, domain: String = null, typeCodes: [GraphQLTypeCodeElementInput!] = null): GraphQLSchemaTemplate!
 
   """Delete a Schema Template"""
   deleteSchemaTemplate(id: String!): String!
@@ -224,10 +221,10 @@ type Mutation {
   deleteReportingSchema(id: String!): String!
 
   """Add a Schema Category to a Reporting Schema"""
-  addSchemaCategory(reportingSchemaId: String!, name: String = null, path: String = null, description: String = null): GraphQLSchemaCategory!
+  addSchemaCategory(reportingSchemaId: String!, typeCodeElementId: String!, description: String = null): GraphQLSchemaCategory!
 
   """Update a Schema Category"""
-  updateSchemaCategory(id: String!, name: String = null, path: String = null, description: String = null): GraphQLSchemaCategory!
+  updateSchemaCategory(id: String!, typeCodeElementId: String, description: String = null): GraphQLSchemaCategory!
 
   """Delete a Schema Category"""
   deleteSchemaCategory(id: String!): String!
@@ -281,7 +278,7 @@ type Mutation {
   deleteTag(id: String!): String!
 
   """Add a new typeCodeElement from csv file"""
-  createTypeCodeElementFromSource(file: String!, name: String!): String!
+  createTypeCodeElementFromSource(file: String!, name: String!, domain: String = null): String!
 
   """Add a new typeCodeElement"""
   createTypeCodeElement(name: String!, code: String!, level: Int!, parentPath: String! = "/"): GraphQLTypeCodeElement!
@@ -355,7 +352,6 @@ input ReportingSchemaFilters {
 }
 
 input SchemaCategoryFilters {
-  name: FilterOptions = null
   id: FilterOptions = null
   description: FilterOptions = null
 }
@@ -382,6 +378,7 @@ input SchemaElementUpdateInput {
 }
 
 input SchemaTemplateFilters {
+  domain: FilterOptions = null
   name: FilterOptions = null
   id: FilterOptions = null
 }
@@ -423,6 +420,7 @@ input TypeCodeElementFilters {
 input TypeCodeFilters {
   name: FilterOptions = null
   id: FilterOptions = null
+  domain: FilterOptions = null
 }
 
 enum Unit {

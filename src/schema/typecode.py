@@ -100,7 +100,7 @@ async def create_type_code_element(
     return type_code_element
 
 
-async def create_type_code_element_from_source(info: Info, file: str, name: str) -> str:
+async def create_type_code_element_from_source(info: Info, file: str, name: str, domain: Optional[str] = None) -> str:
     """Add a new typeCodeElement from csv file"""
     session = get_session(info)
     data = base64.b64decode(file).decode("utf-8")
@@ -127,7 +127,7 @@ async def create_type_code_element_from_source(info: Info, file: str, name: str)
             code_ids.update({type_code_element.code: type_code_element.id})
             session.add(type_code_element)
 
-    type_code = models_type_code.TypeCode(name=name)
+    type_code = models_type_code.TypeCode(name=name, domain=domain)
     session.add(type_code)
 
     with io.StringIO(data) as csv_file:

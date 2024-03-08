@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 async def load_all(folder: Path):
-    await load_reporting(folder / "bim7aa.txt")
+    await load_reporting(folder / "bim7aa_typeCodes.txt")
     await load_tasks(folder)
     await load_source(folder / "source.json")
 

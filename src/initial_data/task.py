@@ -13,6 +13,7 @@ from models.repository import Repository
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 from models.task import Task
+from models.typecode import TypeCodeElement
 
 
 async def load_comments(path: Path):
@@ -56,7 +57,11 @@ async def load_task(path: Path):
             task = await session.get(Task, task_data.get("id"))
             if not task:
                 if name := task_data.pop("category_name", None):
-                    category = (await session.exec(select(SchemaCategory).where(SchemaCategory.name == name))).first()
+                    category = (
+                        await session.exec(
+                            select(SchemaCategory).join(TypeCodeElement).where(TypeCodeElement.name == name)
+                        )
+                    ).first()
                     if not category:
                         continue
                     task_data.update(category_id=category.id)

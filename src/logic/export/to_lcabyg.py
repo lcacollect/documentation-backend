@@ -20,6 +20,7 @@ async def query_for_lca_byg_export(
     query = (
         select(models_schema.SchemaCategory)
         .where(models_category.SchemaCategory.reporting_schema_id == reporting_schema_id)
+        .options(selectinload(models_schema.SchemaCategory.type_code_element))
         .options(selectinload(models_schema.SchemaCategory.reporting_schema))
         .options(
             selectinload(models_category.SchemaCategory.elements).options(
