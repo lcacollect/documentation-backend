@@ -13,6 +13,7 @@ async def query_for_csv_export(reporting_schema_id: str, session) -> list[models
         select(models_schema.SchemaCategory)
         .where(models_category.SchemaCategory.reporting_schema_id == reporting_schema_id)
         .options(selectinload(models_schema.SchemaCategory.reporting_schema))
+        .options(selectinload(models_schema.SchemaCategory.type_code_element))
         .options(
             selectinload(models_category.SchemaCategory.elements)
             .options(selectinload(models_element.SchemaElement.schema_category))
@@ -25,7 +26,6 @@ async def query_for_csv_export(reporting_schema_id: str, session) -> list[models
 
 def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -> str:
     """Generate a CSV string of the database contents."""
-
     separator = ";"
     # Specify the fields
     format_ = separator.join(
@@ -47,7 +47,9 @@ def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -
         # ?: Create extra line for category here?
         for element in category.elements:
             values = {
-                "class": element.schema_category.name,
+                "class": element.schema_category.type_code_element.name
+                if element.schema_category.type_code_element
+                else None,
                 "name": element.name,
                 "source": element.source.name if element.source else "Typed in",
                 "quantity": element.quantity,

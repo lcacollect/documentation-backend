@@ -31,9 +31,9 @@ def _translate_bim7aa_to_gendk(
     Falls back to 'Other' if category does not exist.
     """
     if isinstance(entity, SchemaElement):
-        type_id = entity.schema_category.name.split("|")[0].strip()
+        type_id = entity.schema_category.type_code_element.code
     else:
-        type_id = entity.name.split("|")[0].strip()
+        type_id = entity.type_code_element.code
 
     gend_dk_uuid = _bim7aa_to_gendk_dict.get(str(type_id), None)
     if gend_dk_uuid is None:

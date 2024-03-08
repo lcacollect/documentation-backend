@@ -10,12 +10,14 @@ from lcacollect_config.graphql.input_filters import (
 
 @strawberry.input
 class SchemaTemplateFilters(BaseFilter):
+    domain: Optional[FilterOptions] = None
     name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
 
 
 @strawberry.input
 class SchemaTemplateSort(BaseFilter):
+    domain: Optional[FilterOptions] = None
     name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
 
@@ -43,14 +45,12 @@ class ReportingSchemaSort(BaseFilter):
 
 @strawberry.input
 class SchemaCategoryFilters(BaseFilter):
-    name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
     description: Optional[FilterOptions] = None
 
 
 @strawberry.input
 class SchemaCategorySort(BaseFilter):
-    name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
     description: Optional[FilterOptions] = None
 
@@ -122,6 +122,7 @@ class CommentFilters(BaseFilter):
 class TypeCodeFilters(BaseFilter):
     name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
+    domain: Optional[FilterOptions] = None
 
 
 @strawberry.input

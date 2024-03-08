@@ -14,9 +14,11 @@ from models.repository import Repository
 from models.schema_category import SchemaCategory
 from models.schema_element import SchemaElement
 from models.schema_template import SchemaTemplate
-from models.source import ProjectSource
-from models.tag import Tag
-from models.task import Task
+from models.typecode import TypeCode, TypeCodeElement
+
+# from models.source import ProjectSource
+# from models.tag import Tag
+# from models.task import Task
 
 
 def load_bim7aa(path: Path):
@@ -36,33 +38,44 @@ async def create_categories(rows: list, schema, session):
     categories = []
     print("Creating categories!")
 
+    type_code = TypeCode(name="BIM7", domain="default")
+    session.add(type_code)
+    code_ids = {}
     for row in rows:
-        name = f"{row[0]} | {row[1]}"
-        if len(row[0]) == 1:
-            category = SchemaCategory(path="/", name=name, reporting_schema_id=schema.id, description="")
-        elif len(row[0]) == 2:
-            parent = [cat for cat in categories if cat.name.startswith(f"{row[0][0]} ")][0]
-            category = SchemaCategory(
-                path=f"/{parent.id}",
-                name=name,
-                reporting_schema_id=schema.id,
-                description="",
-            )
-        else:
-            parent = [cat for cat in categories if cat.name.startswith(f"{row[0][:2]} ")][0]
-            category = SchemaCategory(
-                path=f"{parent.path}/{parent.id}",
-                name=name,
-                reporting_schema_id=schema.id,
-                description="",
-            )
-        session.add(category)
-        categories.append(category)
+        type_code_element = create_type_code(row, code_ids, type_code.id)
+        if type_code_element:
+            session.add(type_code_element)
+            category = SchemaCategory(type_code_element_id=type_code_element.id, reporting_schema_id=schema.id)
+            session.add(category)
+            categories.append(category)
 
     await session.commit()
     [await session.refresh(category) for category in categories]
     await session.refresh(schema)
     return categories
+
+
+def create_type_code(row: list, code_ids: dict[str, str], type_code_id: str) -> TypeCodeElement | None:
+    path = list(filter(None, row[3].split("/")))
+    formatted_path = "/"
+    try:
+        if int(row[2]) == 2:
+            formatted_path = f"/{code_ids[path[0]]}"
+        if int(row[2]) == 3:
+            formatted_path = f"/{code_ids[path[0]]}/{code_ids[path[1]]}"
+    except (KeyError, IndexError):
+        return None
+
+    type_code_element = TypeCodeElement(
+        code=row[0],
+        name=row[1],
+        level=row[2],
+        parent_path=formatted_path,
+        typecode_id=type_code_id,
+    )
+    code_ids.update({type_code_element.code: type_code_element.id})
+
+    return type_code_element
 
 
 async def create_schema(session):
@@ -102,7 +115,6 @@ async def create_elements():
             return
 
         query = select(SchemaCategory).where(
-            func.length(SchemaCategory.path) == 74,
             SchemaCategory.reporting_schema_id == "5cf97040-ddf0-4759-af30-aa0e8857ee2f",
         )
 
@@ -182,9 +194,6 @@ async def assign_reporting():
             categories.append(new_category)
 
         for category in categories:
-            if category.path and category.path != "/":
-                path_parts = category.path.split("/")[1:]
-                category.path = "/" + "/".join([path_map[part] for part in path_parts])
             session.add(category)
 
         reporting_schema.categories = categories
@@ -211,6 +220,6 @@ if __name__ == "__main__":
     from models.source import ProjectSource
     from models.tag import Tag
 
-    p = Path(__file__).parent / "bim7aa.txt"
+    p = Path(__file__).parent / "bim7aa_typeCodes.txt"
     r = load_bim7aa(p)
     asyncio.run(create_reporting(r))

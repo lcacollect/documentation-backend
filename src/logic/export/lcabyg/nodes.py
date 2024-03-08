@@ -37,7 +37,7 @@ class Node(Entity):
 class ClassNode(Node):
     def __init__(self, entity: SchemaCategory | SchemaElement):
         self.id = entity.id
-        self.name = entity.name
+        self.name = getattr(entity, "name", None) or entity.type_code_element.name
         self.comment = entity.description
         self.unit = self._get_unit(entity)
         self.element_category_id = self._resolve_category_name(entity)

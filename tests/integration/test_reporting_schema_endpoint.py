@@ -24,7 +24,9 @@ async def test_get_reporting_schemas(
                 name
                 projectId
                 categories {
-                    name
+                    typeCodeElement {
+                        name
+                    }
                     elements {
                         name
                     }
@@ -52,7 +54,9 @@ async def test_get_reporting_schemas_bad_id(
                 name
                 projectId
                 categories {
-                    name
+                    typeCodeElement {
+                        name
+                    }
                     elements {
                         name
                     }

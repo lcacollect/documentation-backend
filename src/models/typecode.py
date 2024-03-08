@@ -15,11 +15,17 @@ class TypeCodeElement(SQLModel, table=True):
     typecode_id: Optional[str] = Field(foreign_key="typecode.id")
     typecode: "TypeCode" = Relationship(back_populates="elements")
 
+    categories: list["SchemaCategory"] = Relationship(
+        back_populates="type_code_element",
+        sa_relationship_kwargs={"cascade": "all,delete"},
+    )
+
 
 class TypeCode(SQLModel, table=True):
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, index=True)
     name: str
     project_id: str | None
+    domain: str | None
 
     # Relationships
     elements: list[TypeCodeElement] = Relationship(

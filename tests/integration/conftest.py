@@ -25,14 +25,17 @@ async def schema_templates(db) -> list[SchemaTemplate]:
     async with AsyncSession(db) as session:
         for i in range(3):
             schema = ReportingSchema(name=f"Reporting Schema {i}")
-            category = SchemaCategory(name=f"Category {i}", project_id="Test Project")
+            type_code_element = TypeCodeElement(code="11", name="Part", level=1)
+            category = SchemaCategory(
+                name=f"Category {i}", project_id="Test Project", type_code_element=type_code_element
+            )
             schema.categories.append(category)
             session.add(category)
             session.add(schema)
             await session.commit()
             await session.refresh(schema)
 
-            template = SchemaTemplate(name=f"Template {i}", original_id=schema.id)
+            template = SchemaTemplate(name=f"Template {i}", original_id=schema.id, domain=f"test {i}")
             schema.template_id = template.id
             session.add(template)
             session.add(schema)
@@ -72,15 +75,13 @@ async def repositories(db, reporting_schemas) -> list[Repository]:
 
 
 @pytest.fixture
-async def schema_categories(db, reporting_schemas) -> list[SchemaCategory]:
+async def schema_categories(db, reporting_schemas, type_code_elements) -> list[SchemaCategory]:
     categories = []
     async with AsyncSession(db) as session:
         for i in range(4):
             category = SchemaCategory(
-                name=f"Schema Category {i}",
-                project_id=f"{i}",
-                path=f"Path {i}",
-                descirption=f"description {i}",
+                type_code_element=type_code_elements[i],
+                description=f"description {i}",
                 reporting_schema=reporting_schemas[i],
             )
             session.add(category)
@@ -273,16 +274,45 @@ async def type_code(db) -> TypeCode:
 async def type_code_elements(db, type_code) -> list[TypeCodeElement]:
     type_code_elements = []
     async with AsyncSession(db) as session:
-        for i in range(4):
-            type_code_element = TypeCodeElement(
-                name=f"Name {i}",
-                code=f"Code {i}",
-                level=i,
-                parent_path=f"/Code {i-1}" if i != 0 else "/",
-                typecode_id=type_code.id,
-            )
-            session.add(type_code_element)
-            type_code_elements.append(type_code_element)
+        type_code_element1 = TypeCodeElement(
+            name="Name 1",
+            code="1",
+            level=1,
+            parent_path="/",
+            typecode_id=type_code.id,
+        )
+        session.add(type_code_element1)
+        type_code_elements.append(type_code_element1)
+
+        type_code_element2 = TypeCodeElement(
+            name="Name 2",
+            code="11",
+            level=2,
+            parent_path=f"/{type_code_element1.id}",
+            typecode_id=type_code.id,
+        )
+        session.add(type_code_element2)
+        type_code_elements.append(type_code_element2)
+
+        type_code_element3 = TypeCodeElement(
+            name="Name 3",
+            code="3",
+            level=1,
+            parent_path=f"/",
+            typecode_id=type_code.id,
+        )
+        session.add(type_code_element3)
+        type_code_elements.append(type_code_element3)
+
+        type_code_element4 = TypeCodeElement(
+            name="Name 4",
+            code="34",
+            level=3,
+            parent_path=f"/{type_code_element3.id}",
+            typecode_id=type_code.id,
+        )
+        session.add(type_code_element4)
+        type_code_elements.append(type_code_element4)
 
         await session.commit()
         [await session.refresh(type_code_elem) for type_code_elem in type_code_elements]

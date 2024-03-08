@@ -167,13 +167,14 @@ async def test_create_task_category(
                             }}
                         ... on GraphQLSchemaCategory {{
                             id
-                            name
+                            typeCodeElement {{
+                                name
+                            }}
                     }}
                 }}
             }}
         }}
     """
-
     data = await get_response(client, mutation)
     assert data["addTask"] == {
         "name": data["addTask"]["name"],
@@ -181,7 +182,7 @@ async def test_create_task_category(
         "dueDate": datetime.date.today().strftime("%Y-%m-%d"),
         "id": data["addTask"]["id"],
         "status": "PENDING",
-        "item": {"id": f"{schema_categories[0].id}", "name": "Schema Category 0"},
+        "item": {"id": f"{schema_categories[0].id}", "typeCodeElement": {"name": "Name 1"}},
     }
     async with AsyncSession(db) as session:
         query = select(Task)
@@ -229,7 +230,9 @@ async def test_update_task(
                             }}
                         ... on GraphQLSchemaCategory {{
                             id
-                            name
+                            typeCodeElement {{
+                                name
+                            }}
                     }}
                 }}
             }}
@@ -243,7 +246,7 @@ async def test_update_task(
         "dueDate": datetime.date.today().strftime("%Y-%m-%d"),
         "id": tasks[0].id,
         "status": "PENDING",
-        "item": {"id": f"{schema_categories[1].id}", "name": "Schema Category 1"},
+        "item": {"id": f"{schema_categories[1].id}", "typeCodeElement": {"name": "Name 2"}},
     }
 
     assert len(users_mock.mock_calls) == 1

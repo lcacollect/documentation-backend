@@ -80,9 +80,16 @@ class GraphQLTask:
     async def item(self, info: Info) -> Union[GraphQLSchemaElement, GraphQLSchemaCategory]:
         session = info.context.get("session")
         if self.category_id:
-            schema_category = await session.get(models_category.SchemaCategory, self.category_id)
+            schema_category = (
+                await session.exec(
+                    select(models_category.SchemaCategory)
+                    .where(models_category.SchemaCategory.id == self.category_id)
+                    .options(selectinload(models_category.SchemaCategory.type_code_element))
+                )
+            ).one()
             return GraphQLSchemaCategory(
                 **schema_category.dict(),
+                type_code_element=schema_category.type_code_element,
                 elements=[],
                 commits=[],
                 reporting_schema=None,
@@ -407,8 +414,7 @@ async def graphql_options(info, query):
 
     Returns: updated query
     """
-
-    if task_field := [field for field in info.selected_fields if field.name == "tasks"]:
+    if task_field := [field for field in info.selected_fields if field.name in ["tasks", "addTask", "editTask"]]:
         if [field for field in task_field[0].selections if field.name == "comments"]:
             query = query.options(selectinload(models_task.Task.comments))
         if [field for field in task_field[0].selections if field.name == "commits"]:
@@ -416,7 +422,11 @@ async def graphql_options(info, query):
         if [field for field in task_field[0].selections if field.name == "reportingSchema"]:
             query = query.options(selectinload(models_task.Task.reporting_schema))
         if [field for field in task_field[0].selections if field.name == "category"]:
-            query = query.options(selectinload(models_task.Task.category))
+            query = query.options(
+                selectinload(models_task.Task.category).options(
+                    selectinload(models_category.SchemaCategory.type_code_element)
+                )
+            )
         if [field for field in task_field[0].selections if field.name == "element"]:
             query = query.options(selectinload(models_task.Task.element))
     return query

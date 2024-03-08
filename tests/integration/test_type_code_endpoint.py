@@ -59,10 +59,10 @@ async def test_get_type_code_elements(client: AsyncClient, type_code_elements, i
     data = await get_response(client, query)
     assert len(data["typeCodeElements"]) == 4
     assert data["typeCodeElements"][0] == {
-        "code": "Code 0",
-        "name": "Name 0",
+        "code": "1",
+        "name": "Name 1",
         "parentPath": "/",
-        "level": 0,
+        "level": 1,
     }
 
 

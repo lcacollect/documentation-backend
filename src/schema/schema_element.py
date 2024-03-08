@@ -278,7 +278,11 @@ async def graphql_options(info, query, base_field: str = "schemaElements"):
         if [field for field in element_field[0].selections if field.name == "commits"]:
             query = query.options(selectinload(models_element.SchemaElement.commits))
         if [field for field in element_field[0].selections if field.name == "schemaCategory"]:
-            query = query.options(selectinload(models_element.SchemaElement.schema_category))
+            query = query.options(
+                selectinload(models_element.SchemaElement.schema_category).options(
+                    selectinload(models_category.SchemaCategory.type_code_element)
+                )
+            )
         if [field for field in element_field[0].selections if field.name == "source"]:
             query = query.options(selectinload(models_element.SchemaElement.source))
     return query

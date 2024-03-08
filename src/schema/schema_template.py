@@ -19,15 +19,13 @@ from schema.inputs import SchemaTemplateFilters
 class GraphQLSchemaTemplate:
     id: str
     name: str
-    schemas: list[schema_reporting.GraphQLReportingSchema] | None
+    original: schema_reporting.GraphQLReportingSchema | None
+    domain: Optional[str] = None
 
 
 @strawberry.input
 class GraphQLTypeCodeElementInput:
-    id: str | None
-    name: str
-    code: str
-    level: int | None
+    id: str
     parent_path: str  # "/parents_parent_id/parent_id" or "/" for no parent
 
 
@@ -49,39 +47,24 @@ async def query_schema_templates(
 
 
 async def add_schema_template_mutation(
-    info: Info, name: str, type_codes: Optional[list[GraphQLTypeCodeElementInput]] = None
+    info: Info,
+    name: str,
+    domain: Optional[str] = None,
+    type_codes: Optional[list[GraphQLTypeCodeElementInput]] = None,
 ) -> GraphQLSchemaTemplate:
     """Add a Schema Template"""
 
     session = get_session(info)
 
-    schema_template = models_template.SchemaTemplate(name=name)
+    schema_template = models_template.SchemaTemplate(name=name, domain=domain)
     session.add(schema_template)
 
+    # create empty ReportingSchema as template with typeCodes
     reporting_schema = models_reporting.ReportingSchema(name=name, template=schema_template)
     session.add(reporting_schema)
 
-    if type_codes:
-        type_code_ids = [type_code.id for type_code in type_codes]
-        type_code_path_map = {}
-        for type_code in type_codes:
-            schema_category = ""
-            if getattr(type_code, "parent_path", "/") == "/":
-                schema_category = models_category.SchemaCategory(
-                    name=type_code.name, path="/", reporting_schema=reporting_schema
-                )
-                type_code_path_map[("/", type_code.id)] = schema_category
-            else:
-                parent_codes = list(filter(None, type_code.parent_path.split("/")))
-                if all(parent_code in type_code_ids for parent_code in parent_codes):
-                    schema_category = models_category.SchemaCategory(
-                        name=type_code.name,
-                        path=construct_parent_path(type_code.parent_path, type_code_path_map),
-                        reporting_schema=reporting_schema,
-                    )
-                    type_code_path_map[(type_code.parent_path, type_code.id)] = schema_category
-            if schema_category:
-                session.add(schema_category)
+    # add child typecodes only with parents, others ignored
+    await create_categories_by_typecodes(info, reporting_schema, type_codes)
 
     await session.commit()
 
@@ -97,71 +80,56 @@ async def add_schema_template_mutation(
     return schema_template
 
 
-def construct_parent_path(path: str, type_code_path_map: dict[tuple[str, str], models_category.SchemaCategory]) -> str:
-    parent_path = "/" if len(path.split("/")) == 2 else "/".join(path.split("/")[:-1])
-    parent_id = path.split("/")[-1]
-    parent_category = type_code_path_map.get((parent_path, parent_id))
-
-    if parent_category.path == "/":
-        return parent_category.path + parent_category.id
-
-    return parent_category.path + "/" + parent_category.id
-
-
 async def update_schema_template_mutation(
-    info: Info, id: str, name: Optional[str] = None, type_codes: Optional[list[GraphQLTypeCodeElementInput]] = None
+    info: Info,
+    id: str,
+    name: Optional[str] = None,
+    domain: Optional[str] = None,
+    type_codes: Optional[list[GraphQLTypeCodeElementInput]] = None,
 ) -> GraphQLSchemaTemplate:
     """Update a Schema Template"""
 
     session = info.context.get("session")
+
+    # update only empty reporting schema, for new projects
+    # older projects are not effected
     query = (
         select(models_template.SchemaTemplate, models_reporting.ReportingSchema)
-        .join(models_reporting.ReportingSchema)
-        .where(models_template.SchemaTemplate.id == id)
+        .join(
+            models_reporting.ReportingSchema,
+            models_reporting.ReportingSchema.id == models_template.SchemaTemplate.original_id,
+        )
+        .where(
+            models_template.SchemaTemplate.id == id,
+        )
     )
+
     for schema_template, reporting_schema in (await session.exec(query)).all():
         if not schema_template:
             raise DatabaseItemNotFound(f"Could not find Schema Template with id: {id}")
 
+        # update template name and domain
         if name:
             schema_template.name = name
             reporting_schema.name = name
-
+        if domain:
+            schema_template.domain = domain
         session.add(schema_template)
         session.add(reporting_schema)
 
+        # remove categories, because parent not having db connection to child
         query = select(models_category.SchemaCategory).where(
             models_category.SchemaCategory.reporting_schema_id == reporting_schema.id
         )
         schema_categories = (await session.exec(query)).all()
 
-        # remove
         for schema_category in schema_categories:
             schema_category.reporting_schema_id = None
             session.delete(schema_category)
             await session.commit()
 
-        if type_codes:
-            # add
-            type_code_ids = [type_code.id for type_code in type_codes]
-            for type_code in type_codes:
-                schema_category = ""
-                if getattr(type_code, "parent_path", "/") == "/":
-                    schema_category = models_category.SchemaCategory(
-                        name=type_code.name, path="/", reporting_schema=reporting_schema
-                    )
-                else:
-                    parent_codes = list(filter(None, type_code.parent_path.split("/")))
-                    if all(parent_code in type_code_ids for parent_code in parent_codes):
-                        schema_category = models_category.SchemaCategory(
-                            name=type_code.name,
-                            path=type_code.parent_path,
-                            reporting_schema=reporting_schema,
-                        )
-                if schema_category:
-                    session.add(schema_category)
-
-        await session.commit()
+        # add child typecodes only with parents, others ignored
+        await create_categories_by_typecodes(info, reporting_schema, type_codes)
 
     query = select(models_template.SchemaTemplate).where(models_template.SchemaTemplate.id == schema_template.id)
     query = check_return_values(info, query)
@@ -196,11 +164,35 @@ def is_project_member(info: Info, members) -> bool:
     return False
 
 
+async def create_categories_by_typecodes(
+    info: Info, reporting_schema: models_category.SchemaCategory, type_codes: list[GraphQLTypeCodeElementInput]
+) -> GraphQLSchemaTemplate:
+    "Add categories to reporting schema"
+    session = info.context.get("session")
+    if type_codes:
+        type_code_ids = [type_code.id for type_code in type_codes]
+        for type_code in type_codes:
+            schema_category = ""
+            # if "/" will be [], all([]) = true
+            parent_codes = list(filter(None, type_code.parent_path.split("/")))
+            if all(parent_code in type_code_ids for parent_code in parent_codes):
+                try:
+                    schema_category = models_category.SchemaCategory(
+                        type_code_element_id=type_code.id, reporting_schema=reporting_schema
+                    )
+                except:
+                    schema_category = ""
+            if schema_category:
+                session.add(schema_category)
+
+        await session.commit()
+
+
 def check_return_values(info: Info, query: Query) -> Query:
     joined_query = query
     for field in info.selected_fields:
         for template_fields in field.selections:
-            if template_fields.name == "schemas":
+            if template_fields.name == "schemas" or "original":
                 joined_query = query.options(selectinload(models_template.SchemaTemplate.schemas)).where(
                     models_reporting.ReportingSchema.project_id == None
                 )
@@ -211,4 +203,11 @@ def check_return_values(info: Info, query: Query) -> Query:
                                 models_reporting.ReportingSchema.categories
                             )
                         ).where(models_reporting.ReportingSchema.project_id == None)
+                    for category in schema_field.selections:
+                        if category.name == "typeCodeElement":
+                            joined_query = query.options(
+                                selectinload(models_template.SchemaTemplate.schemas)
+                                .selectinload(models_reporting.ReportingSchema.categories)
+                                .selectinload(models_category.SchemaCategory.type_code_element)
+                            ).where(models_reporting.ReportingSchema.project_id == None)
     return joined_query
