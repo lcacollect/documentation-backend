@@ -31,22 +31,22 @@ def upgrade():
     op.add_column("typecode", sa.Column("domain", sqlmodel.sql.sqltypes.AutoString(), nullable=True))
     # ### end Alembic commands ###
 
-    bind = op.get_bind()
-    session = sa.orm.Session(bind=bind)
+    # bind = op.get_bind()
+    # session = sa.orm.Session(bind=bind)
 
-    for category in session.query(models_category.SchemaCategory):
-        code, name = category.name.split("|")
-        level = len(category.path.split("/"))
-        type_code_element = models_typecode.TypeCodeElement(
-            code=code,
-            name=name,
-            level=level,
-            parent_path=category.path,
-        )
-        category.type_code_element = type_code_element
-        session.add(category)
+    # for category in session.query(models_category.SchemaCategory):
+    #     code, name = category.name.split("|")
+    #     level = len(category.path.split("/"))
+    #     type_code_element = models_typecode.TypeCodeElement(
+    #         code=code,
+    #         name=name,
+    #         level=level,
+    #         parent_path=category.path,
+    #     )
+    #     category.type_code_element = type_code_element
+    #     session.add(category)
 
-    session.commit()
+    # session.commit()
 
     op.drop_column("schemacategory", "path")
     op.drop_column("schemacategory", "name")
