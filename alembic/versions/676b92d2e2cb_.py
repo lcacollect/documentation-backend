@@ -27,8 +27,6 @@ def upgrade():
     op.create_foreign_key(
         "schemacategory_typecodeelement_fkey", "schemacategory", "typecodeelement", ["type_code_element_id"], ["id"]
     )
-    op.drop_column("schemacategory", "path")
-    op.drop_column("schemacategory", "name")
     op.add_column("schematemplate", sa.Column("domain", sqlmodel.sql.sqltypes.AutoString(), nullable=True))
     op.add_column("typecode", sa.Column("domain", sqlmodel.sql.sqltypes.AutoString(), nullable=True))
     # ### end Alembic commands ###
@@ -49,6 +47,9 @@ def upgrade():
         session.add(category)
 
     session.commit()
+
+    op.drop_column("schemacategory", "path")
+    op.drop_column("schemacategory", "name")
 
 
 def downgrade():
