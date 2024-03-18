@@ -1,5 +1,5 @@
-import io
-import csv
+from csv import DictWriter
+from io import StringIO
 
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
@@ -29,11 +29,11 @@ async def query_for_csv_export(reporting_schema_id: str, session) -> list[models
 
 def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -> str:
     """Generate a CSV string of the database contents."""
-    
-    csv_io = io.StringIO("", newline="")
+
+    csv_io = StringIO("", newline="")
     field_names = ["class", "name", "source", "quantity", "unit", "description", "result"]
 
-    writer = csv.DictWriter(csv_io, fieldnames=field_names, delimiter=";")
+    writer = DictWriter(csv_io, fieldnames=field_names, delimiter=";")
 
     # Generate the header row
     writer.writeheader()
@@ -41,9 +41,11 @@ def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -
     for category in schema_categories:
         for element in category.elements:
             values = {
-                "class": element.schema_category.type_code_element.name
-                if element.schema_category.type_code_element
-                else None,
+                "class": (
+                    element.schema_category.type_code_element.name
+                    if element.schema_category.type_code_element
+                    else None
+                ),
                 "name": element.name,
                 "source": element.source.name if element.source else "Typed in",
                 "quantity": element.quantity,
