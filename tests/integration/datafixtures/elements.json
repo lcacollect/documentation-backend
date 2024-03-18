@@ -5,7 +5,8 @@
     "subclassification": "neurons",
     "quantity": "1",
     "unit": "Megabyte",
-    "description": "a thought is a mental process"
+    "description": "a thought is a mental process",
+    "result": 1
   },
   {
     "name": "Schema Element 2",
@@ -13,6 +14,7 @@
     "subclassification": "neuron",
     "quantity": "16",
     "unit": "N ",
-    "description": "action to move your hand in a certain direction"
+    "description": "action to move your hand in a certain direction",
+    "result": 2
   }
 ]

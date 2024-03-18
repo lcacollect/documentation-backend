@@ -1,3 +1,6 @@
+from csv import DictWriter
+from io import StringIO
+
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
@@ -26,30 +29,23 @@ async def query_for_csv_export(reporting_schema_id: str, session) -> list[models
 
 def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -> str:
     """Generate a CSV string of the database contents."""
-    separator = ";"
-    # Specify the fields
-    format_ = separator.join(
-        [
-            "{class}",
-            "{name}",
-            "{source}",
-            "{quantity}",
-            "{unit}",
-            "{description}",
-            "{result}",
-        ]
-    )
+
+    csv_io = StringIO("", newline="")
+    field_names = ["class", "name", "source", "quantity", "unit", "description", "result"]
+
+    writer = DictWriter(csv_io, fieldnames=field_names, delimiter=";")
+
     # Generate the header row
-    header = format_.replace("{", "").replace("}", "")
-    row_list = [header]
+    writer.writeheader()
     # Extract field values from SchemaElements
     for category in schema_categories:
-        # ?: Create extra line for category here?
         for element in category.elements:
             values = {
-                "class": element.schema_category.type_code_element.name
-                if element.schema_category.type_code_element
-                else None,
+                "class": (
+                    element.schema_category.type_code_element.name
+                    if element.schema_category.type_code_element
+                    else None
+                ),
                 "name": element.name,
                 "source": element.source.name if element.source else "Typed in",
                 "quantity": element.quantity,
@@ -57,6 +53,5 @@ def generate_csv_schema(schema_categories: list[models_schema.SchemaCategory]) -
                 "description": element.description,
                 "result": element.total_result if element.result else None,
             }
-            row_list.append(format_.format(**values))
-    csv_str = "\n".join(row_list)
-    return csv_str
+            writer.writerow(values)
+    return csv_io.getvalue()

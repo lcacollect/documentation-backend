@@ -187,6 +187,7 @@ async def schema_elements(db, schema_categories, project_sources) -> list[Schema
                 description=f"Description {i}",
                 schema_category=schema_categories[i],
                 source=project_sources[i],
+                result={"value": i + 1},
             )
             session.add(element)
             elements.append(element)

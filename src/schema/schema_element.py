@@ -247,8 +247,8 @@ async def delete_schema_element_mutation(info: Info, id: str) -> str:
 
     try:
         commit.schema_elements.remove(schema_element)
-    except ValueError:
-        logger.exception("No schema element in commit object")
+    except ValueError as err:
+        logger.exception("No schema element in commit object - ValueError:", err)
     else:
         session.add(commit)
 
