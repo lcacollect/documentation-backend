@@ -32,3 +32,25 @@ class SchemaElement(SQLModel, table=True):
     )
     source_id: Optional[str] = Field(foreign_key="projectsource.id", nullable=True)
     source: Optional["ProjectSource"] = Relationship(back_populates="elements")
+
+    assembly_id: str | None
+
+    meta_fields: dict = Field(default=None, sa_column=Column(JSON), nullable=False)
+
+    @property
+    def total_result(self):
+        total_result = None
+        if self.result:
+
+            def sum_nested_dict(d):
+                total = 0
+                for value in d.values():
+                    if isinstance(value, dict):
+                        total += sum_nested_dict(value)
+                    else:
+                        total += value
+                return total
+
+            total_result = sum_nested_dict(self.result)
+
+        return round(total_result, 2) if total_result else None

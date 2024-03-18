@@ -13,11 +13,12 @@ class SchemaCategory(SQLModel, table=True):
     """Schema Category database class"""
 
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, nullable=False)
-    path: str | None
-    name: str | None
     description: str | None
 
     # Relationships
+    type_code_element_id: Optional[str] = Field(foreign_key="typecodeelement.id")
+    type_code_element: "TypeCodeElement" = Relationship(back_populates="categories")
+
     reporting_schema_id: Optional[str] = Field(foreign_key="reportingschema.id")
     reporting_schema: "ReportingSchema" = Relationship(back_populates="categories")
     elements: list[SchemaElement] = Relationship(

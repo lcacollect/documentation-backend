@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from core.config import settings
 from models.reporting_schema import ReportingSchema
 from models.repository import Repository
 
@@ -14,8 +13,9 @@ from models.repository import Repository
 async def test_get_reporting_schemas(
     client: AsyncClient,
     reporting_schemas,
-    member_mocker,
     project_exists_mock,
+    member_mocker,
+    project_id,
     get_response: Callable,
 ):
     query = """
@@ -24,7 +24,9 @@ async def test_get_reporting_schemas(
                 name
                 projectId
                 categories {
-                    name
+                    typeCodeElement {
+                        name
+                    }
                     elements {
                         name
                     }
@@ -32,9 +34,9 @@ async def test_get_reporting_schemas(
             }
         }
     """
-    variables = {"projectId": "1"}
+    variables = {"projectId": project_id}
     data = await get_response(client, query, variables=variables)
-    assert data["reportingSchemas"] == [{"name": f"Reporting Schema 1", "projectId": f"1", "categories": []}]
+    assert data["reportingSchemas"][0] == {"name": f"Reporting Schema 0", "projectId": project_id, "categories": []}
 
 
 @pytest.mark.asyncio
@@ -52,7 +54,9 @@ async def test_get_reporting_schemas_bad_id(
                 name
                 projectId
                 categories {
-                    name
+                    typeCodeElement {
+                        name
+                    }
                     elements {
                         name
                     }
@@ -70,8 +74,9 @@ async def test_get_reporting_schemas_bad_id(
 async def test_get_reporting_schemas_with_filter(
     client: AsyncClient,
     reporting_schemas,
-    member_mocker,
     project_exists_mock,
+    member_mocker,
+    project_id,
     get_response: Callable,
 ):
     query = """
@@ -82,11 +87,11 @@ async def test_get_reporting_schemas_with_filter(
             }
         }
     """
-    variables = {"projectId": "0"}
+    variables = {"projectId": project_id}
 
     data = await get_response(client, query, variables=variables)
     assert len(data["reportingSchemas"]) == 1
-    assert data["reportingSchemas"] == [{"name": reporting_schemas[0].name, "projectId": "0"}]
+    assert data["reportingSchemas"] == [{"name": reporting_schemas[0].name, "projectId": project_id}]
 
 
 @pytest.mark.asyncio
@@ -96,7 +101,6 @@ async def test_create_reporting_schema(
     schema_templates,
     db,
     member_mocker,
-    project_exists_mock,
     get_response: Callable,
 ):
     mutation = """
@@ -131,6 +135,7 @@ async def test_update_reporting_schema(
     client: AsyncClient,
     reporting_schemas,
     project_exists_mock,
+    project_id,
     member_mocker,
     get_response: Callable,
 ):
@@ -147,7 +152,7 @@ async def test_update_reporting_schema(
 
     assert data["updateReportingSchema"] == {
         "name": reporting_schemas[0].name,
-        "projectId": "0",
+        "projectId": project_id,
     }
 
 
@@ -177,7 +182,6 @@ async def test_create_reporting_schema_from_template(
     reporting_schemas,
     schema_templates,
     db,
-    project_exists_mock,
     member_mocker,
     get_response: Callable,
 ):

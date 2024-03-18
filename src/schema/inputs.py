@@ -10,12 +10,14 @@ from lcacollect_config.graphql.input_filters import (
 
 @strawberry.input
 class SchemaTemplateFilters(BaseFilter):
+    domain: Optional[FilterOptions] = None
     name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
 
 
 @strawberry.input
 class SchemaTemplateSort(BaseFilter):
+    domain: Optional[FilterOptions] = None
     name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
 
@@ -43,14 +45,12 @@ class ReportingSchemaSort(BaseFilter):
 
 @strawberry.input
 class SchemaCategoryFilters(BaseFilter):
-    name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
     description: Optional[FilterOptions] = None
 
 
 @strawberry.input
 class SchemaCategorySort(BaseFilter):
-    name: Optional[FilterOptions] = None
     id: Optional[FilterOptions] = None
     description: Optional[FilterOptions] = None
 
@@ -87,13 +87,6 @@ class CommitFilters(BaseFilter):
 
 
 @strawberry.input
-class CommitSort(BaseFilter):
-    id: Optional[SortOptions] = None
-    short_id: Optional[SortOptions] = None
-    added: Optional[SortOptions] = None
-
-
-@strawberry.input
 class TagFilters(BaseFilter):
     id: Optional[FilterOptions] = None
     short_id: Optional[FilterOptions] = None
@@ -123,3 +116,18 @@ class CommentFilters(BaseFilter):
     id: Optional[FilterOptions] = None
     added: Optional[FilterOptions] = None
     text: Optional[FilterOptions] = None
+
+
+@strawberry.input
+class TypeCodeFilters(BaseFilter):
+    name: Optional[FilterOptions] = None
+    id: Optional[FilterOptions] = None
+    domain: Optional[FilterOptions] = None
+
+
+@strawberry.input
+class TypeCodeElementFilters(BaseFilter):
+    id: Optional[FilterOptions] = None
+    name: Optional[FilterOptions] = None
+    code: Optional[FilterOptions] = None
+    level: Optional[FilterOptions] = None

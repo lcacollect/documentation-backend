@@ -52,7 +52,7 @@ async def query_reporting_schemas(
 
     session = get_session(info)
     await authenticate_project(info, project_id)
-    await authenticate(info, project_id)
+    await authenticate(info, project_id, check_public=True)
 
     query = select(models_schema.ReportingSchema)
 
@@ -131,31 +131,32 @@ async def add_reporting_schema_from_template_mutation(
         .join(models_template.SchemaTemplate)
         .where(
             models_template.SchemaTemplate.id == template_id,
-            models_schema.ReportingSchema.project_id == None,
+            models_schema.ReportingSchema.id == models_template.SchemaTemplate.original_id,
         )
         .options(selectinload(models_schema.ReportingSchema.categories))
     )
+    # fetch empty(original_id) reporting schema as template
     template_schema = (await session.exec(query)).one()
-    reporting_schema = models_schema.ReportingSchema(name=name or template_schema.name, project_id=project_id)
 
+    # create new reporting schema with project_id
+    reporting_schema = models_schema.ReportingSchema(name=name or template_schema.name, project_id=project_id)
     reporting_schema.template_id = template_schema.template_id
+
+    # add to history table
     repository = models_repository.Repository(
         reporting_schema=reporting_schema, reporting_schema_id=reporting_schema.id
     )
     commit = models_commit.Commit(author_id=user.claims.get("oid"))
     repository.commits.append(commit)
 
-    path_map = {}
     categories = []
     for old_category in template_schema.categories:
         new_category = models_category.SchemaCategory(
             **old_category.dict(exclude={"id", "project_id", "reporting_schema_id"}),
             project_id=project_id,
         )
-        path_map[old_category.id] = new_category.id
         categories.append(new_category)
 
-    update_category_paths(categories, path_map, session)
     reporting_schema.categories = categories
     commit.schema_categories = categories
 
@@ -175,7 +176,7 @@ async def update_reporting_schema_mutation(
 ) -> GraphQLReportingSchema:
     """Update a Reporting Schema"""
 
-    session = info.context.get("session")
+    session = get_session(info)
     reporting_schema = await session.get(models_schema.ReportingSchema, id)
     if not reporting_schema:
         raise DatabaseItemNotFound(f"Could not find Reporting Schema with id: {id}")
@@ -224,25 +225,13 @@ async def graphql_options(info, query):
 
     if schema_field := [field for field in info.selected_fields if field.name == "reportingSchemas"]:
         if category_field := [field for field in schema_field[0].selections if field.name == "categories"]:
-            if [field for field in category_field[0].selections if field.name == "elements"]:
+            if [field for field in category_field[0].selections if field.name in ("elements", "typeCodeElement")]:
                 query = query.options(
                     selectinload(models_schema.ReportingSchema.categories).options(
-                        selectinload(models_category.SchemaCategory.elements)
+                        selectinload(models_category.SchemaCategory.elements),
+                        selectinload(models_category.SchemaCategory.type_code_element),
                     )
                 )
             else:
                 query = query.options(selectinload(models_schema.ReportingSchema.categories))
     return query
-
-
-def update_category_paths(categories, path_map, session):
-    """
-    Updates the Schema Category paths whenever a Reporting Schema is added
-    from a Schema Template to match the Schema Category IDs
-    """
-
-    for category in categories:
-        if category.path and category.path != "/":
-            path_parts = category.path.split("/")[1:]
-            category.path = "/" + "/".join([path_map[part] for part in path_parts])
-        session.add(category)

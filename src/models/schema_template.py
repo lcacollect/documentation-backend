@@ -12,6 +12,7 @@ class SchemaTemplate(SQLModel, table=True):
 
     id: Optional[str] = Field(default_factory=string_uuid, primary_key=True, nullable=False)
     name: str | None
+    domain: str | None
 
     # Relationships
     original_id: Optional[str] = Field(default=None, foreign_key="reportingschema.id")

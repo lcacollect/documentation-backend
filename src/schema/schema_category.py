@@ -19,25 +19,20 @@ from schema.inputs import SchemaCategoryFilters
 if TYPE_CHECKING:  # pragma: no cover
     from schema.commit import GraphQLCommit
     from schema.reporting_schema import GraphQLReportingSchema
-    from schema.schema_element import GraphQLSchemaElement
+    from schema.schema_element import GraphQLTypeCodeElement
+    from schema.typecode import GraphQLTypeCodeElement
 
 
 @strawberry.type
 class GraphQLSchemaCategory:
-    id: str
-    name: str
+    id: strawberry.ID
     description: str | None
     reporting_schema_id: str | None
-    path: str
-
-    @strawberry.field
-    def depth(self) -> int:
-        if not self.path or self.path == "/":
-            return 0
-        else:
-            return self.path.count("/")
-
     reporting_schema: Annotated["GraphQLReportingSchema", strawberry.lazy("schema.reporting_schema")]
+
+    type_code_element_id: str | None
+    type_code_element: Annotated["GraphQLTypeCodeElement", strawberry.lazy("schema.typecode")] | None
+
     elements: list[Annotated["GraphQLSchemaElement", strawberry.lazy("schema.schema_element")]] | None
     commits: list[Annotated["GraphQLCommit", strawberry.lazy("schema.commit")]] | None
 
@@ -54,7 +49,7 @@ async def query_schema_categories(
 
     auth_query = select(models_schema.ReportingSchema).where(models_schema.ReportingSchema.id == reporting_schema_id)
     reporting_schema = (await session.exec(auth_query)).first()
-    await authenticate(info, reporting_schema.project_id)
+    await authenticate(info, reporting_schema.project_id, check_public=True)
 
     if commit_id:
         query = select(models_category.SchemaCategory).where(models_category.CategoryCommitLink.commit_id == commit_id)
@@ -74,8 +69,7 @@ async def query_schema_categories(
 async def add_schema_category_mutation(
     info: Info,
     reporting_schema_id: str,
-    name: Optional[str] = None,
-    path: Optional[str] = None,
+    type_code_element_id: str,
     description: Optional[str] = None,
 ) -> GraphQLSchemaCategory:
     """Add a Schema Category to a Reporting Schema"""
@@ -94,11 +88,10 @@ async def add_schema_category_mutation(
 
     # creates a schema category database class
     schema_category = models_category.SchemaCategory(
-        path=path,
-        name=name,
         description=description,
         reporting_schema=reporting_schema,
         reporting_schema_id=reporting_schema_id,
+        type_code_element_id=type_code_element_id,
     )
 
     # fetches the repository that belongs to the reporting schema
@@ -148,8 +141,7 @@ async def add_schema_category_mutation(
 async def update_schema_category_mutation(
     info: Info,
     id: str,
-    name: Optional[str] = None,
-    path: Optional[str] = None,
+    type_code_element_id: Optional[str],
     description: Optional[str] = None,
 ) -> GraphQLSchemaCategory:
     """Update a Schema Category"""
@@ -190,10 +182,10 @@ async def update_schema_category_mutation(
     commit.short_id = commit.id[:8]
     commit.schema_categories.remove(schema_category)
 
-    kwargs = {"name": name, "path": path, "description": description}
-    for key, value in kwargs.items():
-        if value:
-            setattr(schema_category, key, value)
+    if description is not None:
+        schema_category.description = description
+    if type_code_element_id is not None:
+        schema_category.type_code_element_id = type_code_element_id
 
     commit.schema_categories.append(schema_category)
     session.add(commit)
@@ -291,14 +283,19 @@ async def graphql_options(info, query):
 
     Returns: updated query
     """
-
-    if category_field := [field for field in info.selected_fields if field.name == "schemaCategories"]:
+    if category_field := [
+        field
+        for field in info.selected_fields
+        if field.name in ("schemaCategories", "updateSchemaCategory", "addSchemaCategory")
+    ]:
         if [field for field in category_field[0].selections if field.name == "commits"]:
             query = query.options(selectinload(models_category.SchemaCategory.commits))
         if [field for field in category_field[0].selections if field.name == "elements"]:
             query = query.options(selectinload(models_category.SchemaCategory.elements))
         if [field for field in category_field[0].selections if field.name == "reportingSchema"]:
             query = query.options(selectinload(models_category.SchemaCategory.reporting_schema))
+        if [field for field in category_field[0].selections if field.name == "typeCodeElement"]:
+            query = query.options(selectinload(models_category.SchemaCategory.type_code_element))
     return query
 
 

@@ -1,3 +1,4 @@
+from aiocache import cached
 from lcacollect_config.context import get_token, get_user
 from lcacollect_config.exceptions import AuthenticationError, DatabaseItemNotFound
 from lcacollect_config.validate import group_exists, is_super_admin, project_exists
@@ -17,7 +18,12 @@ def is_project_member(info: Info, members) -> bool:
     return False
 
 
-async def authenticate(info: Info, project_id: str):
+@cached(ttl=60)
+async def authenticate(info: Info, project_id: str, check_public: bool = False):
+    projects = await project_exists(project_id=project_id, token=get_token(info))
+    if check_public is True and projects.get("projects")[0].get("public") is True:
+        return True
+
     members = await get_members(project_id, get_token(info))
     if not is_project_member(info, members):
         raise AuthenticationError("User is not authenticated")

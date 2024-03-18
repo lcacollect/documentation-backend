@@ -30,6 +30,7 @@ from models.schema_template import SchemaTemplate
 # for 'autogenerate' support
 from models.source import ProjectSource
 from models.tag import Tag
+from models.typecode import TypeCode
 
 target_metadata = SQLModel.metadata
 

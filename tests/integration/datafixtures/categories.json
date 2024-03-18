@@ -1,10 +1,14 @@
 [
   {
-    "name": "Schema Category 1",
+    "typeCodeElement": {
+      "name": "Schema Category 1"
+    },
     "description": "this category describes ???"
   },
   {
-    "name": "Schema Category 2",
+    "typeCodeElement": {
+      "name": "Schema Category 2"
+    },
     "description": "this category describes ??"
   }
 ]

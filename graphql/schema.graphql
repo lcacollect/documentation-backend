@@ -35,6 +35,7 @@ input FilterOptions {
   isEmpty: Boolean = null
   isNotEmpty: Boolean = null
   isAnyOf: [String!] = null
+  isTrue: Boolean = null
   jsonContains: String = null
 }
 
@@ -101,27 +102,27 @@ type GraphQLReportingSchema {
 }
 
 type GraphQLSchemaCategory {
-  id: String!
-  name: String!
+  id: ID!
   description: String
   reportingSchemaId: String
-  path: String!
   reportingSchema: GraphQLReportingSchema!
+  typeCodeElementId: String
+  typeCodeElement: GraphQLTypeCodeElement
   elements: [GraphQLSchemaElement!]
   commits: [GraphQLCommit!]
-  depth: Int!
 }
 
-type GraphQLSchemaElement {
-  id: String!
-  name: String!
-  quantity: Float!
-  unit: Unit!
-  description: String
+type GraphQLSchemaElement @key(fields: "id") {
+  id: ID! @shareable
+  name: String! @shareable
+  quantity: Float! @shareable
+  unit: Unit! @shareable
+  description: String @shareable
   schemaCategory: GraphQLSchemaCategory!
   commits: [GraphQLCommit!]!
   source: GraphQLProjectSource
-  result: JSON
+  assemblyId: String @shareable
+  result: JSON @shareable
 }
 
 union GraphQLSchemaElementGraphQLSchemaCategory = GraphQLSchemaElement | GraphQLSchemaCategory
@@ -129,7 +130,8 @@ union GraphQLSchemaElementGraphQLSchemaCategory = GraphQLSchemaElement | GraphQL
 type GraphQLSchemaTemplate {
   id: String!
   name: String!
-  schema: GraphQLReportingSchema
+  original: GraphQLReportingSchema
+  domain: String
 }
 
 type GraphQLSourceFile {
@@ -163,6 +165,26 @@ type GraphQLTask @key(fields: "id") {
   item: GraphQLSchemaElementGraphQLSchemaCategory!
 }
 
+type GraphQLTypeCode {
+  id: String!
+  name: String!
+  elements: [GraphQLTypeCodeElement!]!
+}
+
+type GraphQLTypeCodeElement {
+  id: String!
+  code: String!
+  name: String!
+  level: Int!
+  parentPath: String!
+  parentCode: String!
+}
+
+input GraphQLTypeCodeElementInput {
+  id: String!
+  parentPath: String!
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -170,10 +192,10 @@ scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/fi
 
 type Mutation {
   """Add a Schema Template"""
-  addSchemaTemplate(name: String!): GraphQLSchemaTemplate!
+  addSchemaTemplate(name: String!, domain: String = null, typeCodes: [GraphQLTypeCodeElementInput!] = null): GraphQLSchemaTemplate!
 
   """Update a Schema Template"""
-  updateSchemaTemplate(id: String!, name: String = null): GraphQLSchemaTemplate!
+  updateSchemaTemplate(id: String!, name: String = null, domain: String = null, typeCodes: [GraphQLTypeCodeElementInput!] = null): GraphQLSchemaTemplate!
 
   """Delete a Schema Template"""
   deleteSchemaTemplate(id: String!): String!
@@ -199,22 +221,22 @@ type Mutation {
   deleteReportingSchema(id: String!): String!
 
   """Add a Schema Category to a Reporting Schema"""
-  addSchemaCategory(reportingSchemaId: String!, name: String = null, path: String = null, description: String = null): GraphQLSchemaCategory!
+  addSchemaCategory(reportingSchemaId: String!, typeCodeElementId: String!, description: String = null): GraphQLSchemaCategory!
 
   """Update a Schema Category"""
-  updateSchemaCategory(id: String!, name: String = null, path: String = null, description: String = null): GraphQLSchemaCategory!
+  updateSchemaCategory(id: String!, typeCodeElementId: String, description: String = null): GraphQLSchemaCategory!
 
   """Delete a Schema Category"""
   deleteSchemaCategory(id: String!): String!
 
   """Add a Schema Element to a Schema Category"""
-  addSchemaElement(schemaCategoryId: String!, name: String!, quantity: Float!, unit: Unit!, description: String!): GraphQLSchemaElement!
+  addSchemaElement(schemaCategoryId: String!, name: String!, quantity: Float!, unit: Unit!, description: String!, assemblyId: String = null): GraphQLSchemaElement!
 
   """Add a Schema Element to a Schema Category"""
-  addSchemaElementFromSource(schemaCategoryId: String!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
+  addSchemaElementFromSource(schemaCategoryIds: [String!]!, sourceId: String!, objectIds: [String!]!, units: [Unit!] = null, quantities: [Float!] = null): [GraphQLSchemaElement!]!
 
-  """Update a Schema Element"""
-  updateSchemaElement(id: String!, name: String = null, schemaCategoryId: String = null, quantity: Float = null, unit: Unit = null, description: String = null, result: JSON = null): GraphQLSchemaElement!
+  """Update Schema Elements"""
+  updateSchemaElements(schemaElements: [SchemaElementUpdateInput!]!): [GraphQLSchemaElement!]!
 
   """Delete a Schema Element"""
   deleteSchemaElement(id: String!): String!
@@ -254,6 +276,18 @@ type Mutation {
 
   """Delete a tag"""
   deleteTag(id: String!): String!
+
+  """Add a new typeCodeElement from csv file"""
+  createTypeCodeElementFromSource(file: String!, name: String!, domain: String = null): String!
+
+  """Add a new typeCodeElement"""
+  createTypeCodeElement(name: String!, code: String!, level: Int!, parentPath: String! = "/"): GraphQLTypeCodeElement!
+
+  """update typeCodeElement"""
+  updateTypeCodeElement(id: String!, name: String = null, level: Int = null, code: String = null, parentPath: String = "/"): GraphQLTypeCodeElement!
+
+  """Delete a TypeCodeElement"""
+  deleteTypeCodeElement(id: String!): String!
 }
 
 input ProjectSourceFilters {
@@ -285,7 +319,7 @@ type Query {
   schemaCategories(reportingSchemaId: String!, commitId: String = null, filters: SchemaCategoryFilters = null): [GraphQLSchemaCategory!]!
 
   """Get all schema elements for a list of categories"""
-  schemaElements(schemaCategoryIds: [String!]!, commitId: String = null, filters: SchemaElementFilters = null): [GraphQLSchemaElement!]!
+  schemaElements(schemaCategoryIds: [String!]!, elementId: String = null, commitId: String = null, filters: SchemaElementFilters = null): [GraphQLSchemaElement!]!
 
   """Get all commits of a Reporting Schema"""
   commits(reportingSchemaId: String!, filters: CommitFilters = null): [GraphQLCommit!]!
@@ -303,6 +337,12 @@ type Query {
   Resolver for exporting the database contents as a base64 encoded string.
   """
   exportReportingSchema(reportingSchemaId: String!, exportFormat: exportFormat!): String!
+
+  """Get typeCodeElements"""
+  typeCodeElements(filters: TypeCodeElementFilters = null): [GraphQLTypeCodeElement!]!
+
+  """Get Type Codes"""
+  typeCodes(filters: TypeCodeFilters = null): [GraphQLTypeCode!]!
 }
 
 input ReportingSchemaFilters {
@@ -312,7 +352,6 @@ input ReportingSchemaFilters {
 }
 
 input SchemaCategoryFilters {
-  name: FilterOptions = null
   id: FilterOptions = null
   description: FilterOptions = null
 }
@@ -327,7 +366,19 @@ input SchemaElementFilters {
   description: FilterOptions = null
 }
 
+input SchemaElementUpdateInput {
+  id: String!
+  name: String = null
+  schemaCategory: String = null
+  quantity: Float = null
+  unit: Unit = null
+  description: String = null
+  result: JSON = null
+  assemblyId: String = null
+}
+
 input SchemaTemplateFilters {
+  domain: FilterOptions = null
   name: FilterOptions = null
   id: FilterOptions = null
 }
@@ -359,18 +410,34 @@ enum TaskStatus {
   APPROVED
 }
 
+input TypeCodeElementFilters {
+  id: FilterOptions = null
+  name: FilterOptions = null
+  code: FilterOptions = null
+  level: FilterOptions = null
+}
+
+input TypeCodeFilters {
+  name: FilterOptions = null
+  id: FilterOptions = null
+  domain: FilterOptions = null
+}
+
 enum Unit {
   M
   M2
   M3
+  L
   KG
   PCS
+  TONNES
+  TONNES_KM
   NONE
 }
 
 scalar _Any
 
-union _Entity = GraphQLProjectMember | GraphQLProjectSource | GraphQLTask | GraphQLComment
+union _Entity = GraphQLProjectMember | GraphQLProjectSource | GraphQLSchemaElement | GraphQLTask | GraphQLComment
 
 type _Service {
   sdl: String!
@@ -379,6 +446,7 @@ type _Service {
 enum exportFormat {
   LCABYG
   CSV
+  LCAX
 }
 
 input taskItem {

@@ -11,8 +11,10 @@ from schema.source import ProjectSourceType
 async def test_project_sources_query(
     client: AsyncClient,
     project_sources,
-    member_mocker,
+    project_id,
     project_exists_mock,
+    member_mocker,
+    blob_client_mock,
     get_response: Callable,
 ):
     query = """
@@ -29,12 +31,12 @@ async def test_project_sources_query(
             }
         }
     """
-    variables = {"projectId": "0"}
+    variables = {"projectId": project_id}
 
     data = await get_response(client, query, variables=variables)
     assert data["projectSources"][0] == {
         "name": f"Source 0",
-        "projectId": f"0",
+        "projectId": project_id,
         "metaFields": dict(speckle_url="speckle.arkitema.com"),
         "dataId": "21b253d478",
         "data": None,
@@ -44,8 +46,9 @@ async def test_project_sources_query(
 async def test_project_sources_query_filters(
     client: AsyncClient,
     project_sources,
-    member_mocker,
     project_exists_mock,
+    project_id,
+    member_mocker,
     get_response: Callable,
 ):
     query = """
@@ -58,12 +61,12 @@ async def test_project_sources_query_filters(
             }
         }
     """
-    variables = {"projectId": "1", "name": "Source 1"}
+    variables = {"projectId": project_id, "name": "Source 1"}
 
     data = await get_response(client, query, variables=variables)
     assert data["projectSources"][0] == {
         "name": f"Source 1",
-        "projectId": f"1",
+        "projectId": project_id,
         "metaFields": dict(speckle_url="speckle.arkitema.com"),
         "dataId": "21b253d478",
     }
@@ -74,7 +77,6 @@ async def test_add_CSV_file_source_mutation(
     project_sources,
     member_mocker,
     blob_client_mock_async,
-    project_exists_mock,
     get_response: Callable,
 ):
     query = f"""
@@ -113,7 +115,6 @@ async def test_add_XLSX_file_source_mutation(
     project_sources,
     member_mocker,
     blob_client_mock_async,
-    project_exists_mock,
     get_response: Callable,
 ):
     query = f"""
@@ -184,8 +185,10 @@ async def test_add_speckle_source_mutation(
 async def test_update_project_source_mutation(
     client: AsyncClient,
     project_sources,
+    project_exists_mock,
     member_mocker,
     blob_client_mock_async,
+    project_id,
     get_response: Callable,
 ):
     query = """
@@ -222,7 +225,7 @@ async def test_update_project_source_mutation(
 
     data = await get_response(client, query, variables=variables)
     assert data["updateProjectSource"] == {
-        "projectId": "0",
+        "projectId": project_id,
         "type": ProjectSourceType.CSV.name,
         "dataId": expected_source_id,
         "name": "Modified Project",
@@ -230,7 +233,7 @@ async def test_update_project_source_mutation(
 
 
 async def test_delete_project_source_mutation(
-    client: AsyncClient, project_sources, member_mocker, get_response: Callable
+    client: AsyncClient, project_sources, project_exists_mock, member_mocker, get_response: Callable
 ):
     # FIXME: this test for absence of errors, not correct behaviour
     query = """
